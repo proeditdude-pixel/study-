@@ -22,16 +22,17 @@
         .gui-btn-primary { background:#fff; color:#000; }
         .gui-btn-sec { background:var(--glass); color:#fff; border:1px solid var(--border); }
 
-        .banner { width:100%; height:130px; border-radius:18px; object-fit:cover; background:#222; }
-        .pfp-wrap { width:75px; height:75px; border-radius:20px; border:4px solid #000; margin-top:-38px; margin-left:15px; overflow:hidden; background:#333; }
-        .badge { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:bold; margin-right:5px; background:var(--accent); color:#fff; }
+        .banner { width:100%; height:130px; border-radius:18px; object-fit:cover; background:#222; cursor:pointer; }
+        .pfp-wrap { width:75px; height:75px; border-radius:20px; border:4px solid #000; margin-top:-38px; margin-left:15px; overflow:hidden; background:#333; cursor:pointer; }
+        .badge { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:bold; margin-right:5px; background:var(--accent); }
         
         .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:center; justify-content:center; }
         .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:30px; display:flex; justify-content:space-around; align-items:center; border:1px solid var(--border); }
-        .nav-item { opacity:0.4; font-size:10px; font-weight:bold; cursor:pointer; }
+        .nav-item { opacity:0.4; font-size:9px; font-weight:bold; cursor:pointer; text-align:center; }
         .nav-item.active { opacity:1; }
 
-        .search-res { padding:12px; border-radius:15px; background:rgba(255,255,255,0.05); margin-bottom:8px; display:flex; align-items:center; gap:12px; border:1px solid var(--border); }
+        .res-item { padding:15px; background:var(--glass); border-radius:15px; margin-bottom:10px; border:1px solid var(--border); cursor:pointer; }
+        .msg-badge { background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px; position:absolute; top:-5px; right:-10px; }
     </style>
 </head>
 <body>
@@ -39,64 +40,51 @@
     <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size:32px; font-weight:900;">My Subjects</h1>
+        <h1 style="font-size:32px; font-weight:900;">Subjects</h1>
         <div id="subject-container"></div>
-        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-subject')">+ Create Subject</button>
-    </div>
-
-    <div id="view-detail" class="screen">
-        <div onclick="ui.show('home')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back</div>
-        <h2 id="det-title" style="font-size:28px;"></h2>
-        <div id="task-container"></div>
-        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-task')">+ Add Goal & Date</button>
+        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-subject')">+ New Subject</button>
     </div>
 
     <div id="view-search" class="screen">
-        <h1 style="font-size:32px; font-weight:900;">Search</h1>
-        <div class="glass-card" style="padding:10px;">
-            <input type="text" id="sq" class="gui-input" placeholder="Search students..." oninput="core.doSearch()">
-        </div>
-        <div id="search-results"></div>
+        <h1 style="font-size:32px; font-weight:900;">Omni Search</h1>
+        <input type="text" id="sq" class="gui-input" placeholder="Search users, subjects, or goals..." oninput="core.doSearch()">
+        <div id="search-results" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="view-messages" class="screen">
+        <h1 style="font-size:32px; font-weight:900;">Messages</h1>
+        <div id="announcements-container"></div>
+        <div id="invites-container"></div>
     </div>
 
     <div id="view-profile" class="screen" style="padding:0;">
         <div style="position:relative;">
-            <img id="u-banner" src="https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800" class="banner">
+            <img id="u-banner" src="https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800" class="banner" onclick="core.triggerUpload('banner')">
             <div onclick="core.toSettings()" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); padding:10px; border-radius:15px; cursor:pointer;">⚙️ Settings</div>
         </div>
-        <div class="pfp-wrap"><img id="u-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest"></div>
+        <div class="pfp-wrap" onclick="core.triggerUpload('pfp')"><img id="u-pfp" src=""></div>
         <div style="padding:20px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <h1 id="u-name" style="margin:0;">Guest</h1>
-                <div id="u-badges"></div>
+            <h1 id="u-name" style="margin:0;">Guest</h1>
+            <div id="u-badges"></div>
+            <div id="auth-box" style="margin-top:20px; display:flex; gap:10px;">
+                <button class="gui-btn gui-btn-primary" onclick="gui.open('auth', 'signup')">Sign Up</button>
+                <button class="gui-btn gui-btn-sec" onclick="gui.open('auth', 'login')">Log In</button>
             </div>
-            <p id="u-date" style="opacity:0.5; font-size:12px;"></p>
-            <div id="auth-box"><button class="gui-btn gui-btn-primary" style="margin-top:20px;" onclick="gui.open('auth')">Login / Sign Up</button></div>
         </div>
     </div>
 
-    <div id="view-settings" class="screen">
-        <div onclick="ui.show('profile')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back</div>
-        <h2 style="font-size:28px;">Settings</h2>
-        <div class="glass-card" onclick="ui.show('family')" style="cursor:pointer; display:flex; justify-content:space-between;">
-            <span>👨‍👩‍👧 Family Center</span><span>→</span>
-        </div>
-        <button class="gui-btn gui-btn-sec" style="color:#ff453a; margin-top:20px;" onclick="core.logout()">Log Out</button>
+    <div id="view-visitor" class="screen" style="padding:0;">
+        <div onclick="ui.show('search')" style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.5); padding:10px; border-radius:10px;">← Back</div>
+        <img id="v-banner" src="" class="banner">
+        <div class="pfp-wrap"><img id="v-pfp" src=""></div>
+        <div style="padding:20px;"><h1 id="v-name"></h1><div id="v-subjects"></div></div>
     </div>
 
-    <div id="view-family" class="screen">
-        <div onclick="ui.show('settings')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back</div>
-        <h2 style="font-size:28px;">Family Center</h2>
-        <div class="glass-card">
-            <input type="text" id="fam-in" class="gui-input" placeholder="Invite username...">
-            <button class="gui-btn gui-btn-primary" onclick="core.invite()">Invite</button>
-        </div>
-        <div id="family-list"></div>
-    </div>
+    <input type="file" id="file-input" style="display:none" onchange="core.handleFile(this)">
 
     <div id="dialog" class="overlay">
         <div class="glass-card" style="width:85%; max-width:320px;">
-            <h3 id="d-title">Dialog</h3>
+            <h3 id="d-title"></h3>
             <div id="d-body"></div>
             <div id="d-footer" style="margin-top:20px; display:flex; gap:10px;"></div>
         </div>
@@ -105,10 +93,12 @@
     <nav class="dock">
         <div class="nav-item active" onclick="ui.show('home', this)">HOME</div>
         <div class="nav-item" onclick="ui.show('search', this)">SEARCH</div>
+        <div class="nav-item" style="position:relative;" onclick="ui.show('messages', this)">MSGS<span id="msg-dot" class="msg-badge" style="display:none">!</span></div>
         <div class="nav-item" onclick="ui.show('profile', this)">ME</div>
     </nav>
 
 <script>
+    // Firebase Init
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -121,31 +111,26 @@
 
     let state = {
         user: localStorage.getItem('ss_u'),
+        pass: localStorage.getItem('ss_p'),
         subjects: JSON.parse(localStorage.getItem('ss_s')) || [],
         family: JSON.parse(localStorage.getItem('ss_f')) || [],
-        badges: JSON.parse(localStorage.getItem('ss_b')) || [],
-        created: localStorage.getItem('ss_d') || "Jan 18, 2026",
-        activeIdx: null
+        pfp: localStorage.getItem('ss_pfp') || 'https://api.dicebear.com/7.x/notionists/svg?seed=Guest',
+        banner: localStorage.getItem('ss_bnr') || '',
+        invites: []
     };
 
     const gui = {
-        open(type) {
-            const body = document.getElementById('d-body'), foot = document.getElementById('d-footer'), head = document.getElementById('d-title');
-            body.innerHTML = ""; foot.innerHTML = "";
-            if(type === 'new-subject') {
-                head.innerText = "New Subject";
-                body.innerHTML = `<input id="v1" class="gui-input" placeholder="Subject Name">`;
-                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addSubject()">Create</button>`;
-            }
-            if(type === 'new-task') {
-                head.innerText = "Add Goal";
-                body.innerHTML = `<input id="v1" class="gui-input" placeholder="Goal"><input id="v2" type="date" class="gui-input" value="2026-01-18">`;
-                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addTask()">Add</button>`;
-            }
+        open(type, mode) {
+            const b = document.getElementById('d-body'), f = document.getElementById('d-footer'), h = document.getElementById('d-title');
+            b.innerHTML = ""; f.innerHTML = ""; h.innerText = type;
             if(type === 'auth') {
-                head.innerText = "Login / Sign Up";
-                body.innerHTML = `<input id="v1" class="gui-input" placeholder="Username">`;
-                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.login()">Continue</button>`;
+                h.innerText = mode === 'signup' ? "Create Account" : "Welcome Back";
+                b.innerHTML = `<input id="v1" class="gui-input" placeholder="Username"><input id="v2" type="password" class="gui-input" placeholder="Password">`;
+                f.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.auth('${mode}')">Submit</button><button class="gui-btn gui-btn-sec" onclick="gui.close()">Cancel</button>`;
+            }
+            if(type === 'new-subject') {
+                b.innerHTML = `<input id="v1" class="gui-input" placeholder="Subject Name">`;
+                f.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addSubject()">Create</button>`;
             }
             document.getElementById('dialog').style.display = 'flex';
         },
@@ -157,69 +142,114 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
             document.getElementById('view-'+id).classList.add('screen-active');
             if(el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
-        },
-        renderSubjects() {
-            document.getElementById('subject-container').innerHTML = state.subjects.map((s,i) => `
-                <div class="glass-card" onclick="ui.openSubject(${i})"><b>${s.name}</b><br><small style="opacity:0.5">${s.tasks.length} Goals</small></div>
-            `).join('');
-        },
-        openSubject(i) {
-            state.activeIdx = i;
-            document.getElementById('det-title').innerText = state.subjects[i].name;
-            this.renderTasks(); this.show('detail');
-        },
-        renderTasks() {
-            const tasks = state.subjects[state.activeIdx].tasks;
-            document.getElementById('task-container').innerHTML = tasks.map(t => `
-                <div class="glass-card" style="padding:12px;"><b>${t.task}</b><br><small style="opacity:0.5">📅 ${t.date}</small></div>
-            `).join('');
-        },
-        renderFamily() {
-            document.getElementById('family-list').innerHTML = state.family.map(f => `<div class="glass-card">${f}</div>`).join('');
         }
     };
 
     const core = {
-        toSettings() { if(!state.user) gui.open('auth'); else ui.show('settings'); },
-        async sync() {
-            localStorage.setItem('ss_u', state.user || "");
-            localStorage.setItem('ss_s', JSON.stringify(state.subjects));
-            localStorage.setItem('ss_f', JSON.stringify(state.family));
-            if(state.user) await rdb.ref('users/'+state.user.toLowerCase()).set(state);
+        async auth(mode) {
+            const u = document.getElementById('v1').value.trim().toLowerCase();
+            const p = document.getElementById('v2').value;
+            if(!u || !p) return;
+            const snap = await rdb.ref('users/'+u).once('value');
+            if(mode === 'login') {
+                if(snap.exists() && snap.val().pass === p) {
+                    Object.assign(state, snap.val());
+                    this.saveLocal(); location.reload();
+                } else { alert("Invalid Credentials"); }
+            } else {
+                if(snap.exists()) return alert("User exists");
+                state.user = u; state.pass = p;
+                await rdb.ref('users/'+u).set(state);
+                this.saveLocal(); location.reload();
+            }
         },
-        async login() {
-            const u = document.getElementById('v1').value.trim(); if(!u) return;
-            const s = await rdb.ref('users/'+u.toLowerCase()).once('value');
-            if(s.exists()) Object.assign(state, s.val()); else { state.user = u; state.badges = ["Pro"]; }
-            await this.sync(); location.reload();
+        saveLocal() {
+            localStorage.setItem('ss_u', state.user); localStorage.setItem('ss_p', state.pass);
+            localStorage.setItem('ss_s', JSON.stringify(state.subjects));
         },
         async doSearch() {
             const q = document.getElementById('sq').value.toLowerCase();
-            const res = document.getElementById('search-results'); if(!q) { res.innerHTML = ""; return; }
+            const res = document.getElementById('search-results');
+            if(!q) { res.innerHTML = ""; return; }
             const snap = await rdb.ref('users').once('value');
             let html = "";
             snap.forEach(c => {
                 const u = c.val();
-                if(u.username && u.username.includes(q)) html += `<div class="search-res"><b>${u.username}</b></div>`;
+                if(u.user.includes(q)) html += `<div class="res-item" onclick="core.viewUser('${u.user}')">👤 User: ${u.user}</div>`;
+                (u.subjects||[]).forEach(s => {
+                    if(s.name.toLowerCase().includes(q)) html += `<div class="res-item">📚 Subject: ${s.name} (by ${u.user})</div>`;
+                });
             });
             res.innerHTML = html;
         },
-        addSubject() { const n = document.getElementById('v1').value; if(n){ state.subjects.push({name:n, tasks:[]}); this.sync(); ui.renderSubjects(); gui.close(); }},
-        addTask() { const t = document.getElementById('v1').value, d = document.getElementById('v2').value; if(t){ state.subjects[state.activeIdx].tasks.push({task:t, date:d}); this.sync(); ui.renderTasks(); gui.close(); }},
-        invite() { const u = document.getElementById('fam-in').value; if(u){ state.family.push(u); this.sync(); ui.renderFamily(); }},
-        logout() { localStorage.clear(); location.reload(); }
+        async viewUser(uname) {
+            const s = await rdb.ref('users/'+uname).once('value');
+            const d = s.val();
+            document.getElementById('v-name').innerText = d.user;
+            document.getElementById('v-pfp').src = d.pfp;
+            document.getElementById('v-banner').src = d.banner;
+            ui.show('visitor');
+        },
+        triggerUpload(mode) { this.upMode = mode; document.getElementById('file-input').click(); },
+        handleFile(el) {
+            const f = el.files[0]; const reader = new FileReader();
+            reader.onload = async (e) => {
+                if(this.upMode === 'pfp') state.pfp = e.target.result;
+                else state.banner = e.target.result;
+                await rdb.ref('users/'+state.user).update(state);
+                location.reload();
+            };
+            reader.readAsDataURL(f);
+        },
+        async invite() {
+            const target = document.getElementById('fam-in').value.trim().toLowerCase();
+            if(!target) return;
+            const snap = await rdb.ref('users/'+target).once('value');
+            if(snap.exists()) {
+                const currentInvites = snap.val().invites || [];
+                currentInvites.push(state.user);
+                await rdb.ref('users/'+target+'/invites').set(currentInvites);
+                alert("Invite Sent!");
+            }
+        },
+        async respondInvite(sender, accept) {
+            state.invites = state.invites.filter(i => i !== sender);
+            if(accept) state.family.push(sender);
+            await rdb.ref('users/'+state.user).update({invites: state.invites, family: state.family});
+            location.reload();
+        }
     };
 
-    window.onload = () => {
+    window.onload = async () => {
         if(state.user) {
-            document.getElementById('u-name').innerText = state.user;
-            document.getElementById('u-date').innerText = "Joined: " + state.created;
+            const snap = await rdb.ref('users/'+state.user).once('value');
+            const d = snap.val();
+            document.getElementById('u-name').innerText = d.user;
+            document.getElementById('u-pfp').src = d.pfp;
+            document.getElementById('u-banner').src = d.banner;
             document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('u-badges').innerHTML = state.badges.map(b => `<span class="badge">${b}</span>`).join('');
+            
+            // Render Invites
+            if(d.invites && d.invites.length > 0) {
+                document.getElementById('msg-dot').style.display = 'block';
+                document.getElementById('invites-container').innerHTML = d.invites.map(i => `
+                    <div class="glass-card">
+                        <p><b>${i}</b> invited you to their family!</p>
+                        <div style="display:flex; gap:10px;">
+                            <button class="gui-btn gui-btn-primary" onclick="core.respondInvite('${i}', true)">Accept</button>
+                            <button class="gui-btn gui-btn-sec" onclick="core.respondInvite('${i}', false)">Decline</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            // Admin Announcements
+            document.getElementById('announcements-container').innerHTML = `
+                <div class="glass-card" style="border-left: 4px solid var(--accent)">
+                    <small style="color:var(--accent)">ADMIN ANNOUNCEMENT</small>
+                    <p>Welcome to SyllabusStudy v2.0! Omni-search is now live.</p>
+                </div>`;
         }
-        ui.renderSubjects(); ui.renderFamily();
     };
 </script>
 </body>
 </html>
-
