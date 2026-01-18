@@ -2,470 +2,695 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Syllabus Titan v10</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SyllabusStudy v4</title>
     
-    <link rel="manifest" href="manifest.json">
-
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
+        /* =========================================
+           1. CSS VARIABLES & THEME
+           ========================================= */
         :root {
-            --surface-1: #050505;
-            --surface-2: #0f1115;
-            --surface-3: #181b21;
-            --neon-blue: #00f3ff;
-            --neon-purple: #bc13fe;
-            --neon-red: #ff003c;
-            --neon-green: #0aff00;
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --bg: #000000;
+            --surface: #1C1C1E;
+            --surface-highlight: #2C2C2E;
+            --primary: #0A84FF;
+            --primary-dim: rgba(10, 132, 255, 0.2);
+            --text-main: #FFFFFF;
+            --text-sec: #8E8E93;
+            --border: rgba(255,255,255,0.12);
+            --danger: #FF453A;
+            --radius: 20px;
+            --header-h: 180px; /* Banner Height */
+            --pfp-size: 100px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; background: var(--surface-1); color: #e0e0e0; font-family: var(--font-main); overflow: hidden; height: 100vh; }
+        body, html {
+            margin: 0; padding: 0;
+            background: var(--bg); color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
+            height: 100%; overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        /* UTILITIES */
-        .h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 15px 0; }
-        .h2 { font-size: 18px; font-weight: 600; opacity: 0.9; }
-        .h3 { font-size: 14px; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
-        .text-dim { color: #888; font-size: 13px; }
-        .text-mono { font-family: 'Courier New', monospace; font-size: 12px; }
-        .gradient-text { background: linear-gradient(135deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* =========================================
+           2. NAVIGATION VIEWS
+           ========================================= */
+        .app-container {
+            position: relative; width: 100%; height: 100%;
+        }
 
-        /* COMPONENTS */
+        .view {
+            position: absolute; inset: 0;
+            padding: 20px 20px 100px 20px; /* Bottom padding for Dock */
+            overflow-y: auto;
+            opacity: 0; pointer-events: none;
+            transform: scale(0.98);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none; /* Crucial for performance */
+        }
+
+        .view.active {
+            opacity: 1; pointer-events: auto;
+            transform: scale(1);
+            display: block;
+        }
+
+        /* =========================================
+           3. UI COMPONENTS
+           ========================================= */
+        h1 { margin: 0 0 5px 0; font-size: 32px; font-weight: 700; }
+        p { color: var(--text-sec); margin: 0; font-size: 15px; }
+
         .btn {
-            background: var(--surface-3); border: 1px solid var(--glass-border); color: white;
-            padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s ease; width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+            background: var(--surface-highlight); color: white;
+            border: none; padding: 15px; width: 100%;
+            border-radius: 14px; font-size: 16px; font-weight: 600;
+            margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: var(--neon-blue); color: #000; border: none; box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
-        .btn-ghost { background: transparent; border: 1px solid var(--glass-border); }
-        .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; }
+        .btn:active { opacity: 0.7; transform: scale(0.98); }
+        .btn.primary { background: var(--primary); color: white; }
+        .btn.danger { background: rgba(255,69,58,0.15); color: var(--danger); }
 
-        .card { background: var(--surface-2); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
-        .card-glass { background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(10px); }
-        .card-interactive:active { background: var(--surface-3); }
-
-        .input-field {
-            width: 100%; background: var(--surface-1); border: 1px solid var(--glass-border);
-            color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none;
-            transition: border-color 0.3s;
+        .inp {
+            background: var(--surface); border: 1px solid var(--border);
+            color: white; padding: 16px; width: 100%;
+            border-radius: 14px; font-size: 16px; outline: none;
         }
-        .input-field:focus { border-color: var(--neon-blue); }
+        .inp:focus { border-color: var(--primary); background: #222; }
 
-        /* LAYOUTS */
-        #boot-terminal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; padding: 20px;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            font-family: 'Courier New', monospace; color: var(--neon-green);
+        .card {
+            background: var(--surface); padding: 20px;
+            border-radius: var(--radius); margin-bottom: 15px;
+            border: 1px solid var(--border);
+            position: relative;
         }
+        .card.link:active { background: var(--surface-highlight); }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            color: var(--primary); font-weight: 600; margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        /* =========================================
+           4. FIXED PROFILE LAYOUT (THE FIX)
+           ========================================= */
+        /* This container holds the banner and the overlapping avatar */
+        .hero-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 60px; /* IMPORTANT: Space for the overlapping avatar */
+        }
+
+        .hero-banner {
+            width: 100%;
+            height: var(--header-h);
+            background-color: #333;
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+        }
+        .hero-banner img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hero-avatar {
+            width: var(--pfp-size);
+            height: var(--pfp-size);
+            border-radius: 35px; /* Squircle */
+            background-color: var(--surface);
+            border: 5px solid var(--bg); /* The "Cutout" effect */
+            position: absolute;
+            bottom: -50px; /* Half of height to overlap */
+            left: 20px;
+            overflow: hidden;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hero-info {
+            padding-left: 5px;
+        }
+
+        /* =========================================
+           5. BOTTOM DOCK
+           ========================================= */
+        .dock {
+            position: fixed; bottom: 25px; left: 20px; right: 20px;
+            height: 70px;
+            background: rgba(28,28,30,0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 35px; border: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 1000;
+        }
+        .dock-item {
+            opacity: 0.5; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .dock-item.active { opacity: 1; color: var(--primary); transform: translateY(-3px); }
+        .dock-item svg { width: 26px; height: 26px; fill: currentColor; }
+
+        /* =========================================
+           6. UTILS
+           ========================================= */
+        .hidden { display: none !important; }
         
-        #app-viewport {
-            display: none; height: 100vh; display: flex; flex-direction: column;
-            opacity: 0; transition: opacity 0.5s ease;
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .modal {
+            background: var(--surface); width: 85%; max-width: 400px;
+            padding: 25px; border-radius: var(--radius); border: 1px solid var(--border);
         }
 
-        .view-container { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        
-        /* NAVBAR */
-        .nav-dock {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 17, 21, 0.85); backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); border-radius: 24px;
-            display: flex; padding: 5px; gap: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 100;
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 10px 20px; border-radius: 20px;
+            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 3000; font-size: 14px;
         }
-        .nav-item {
-            width: 50px; height: 50px; border-radius: 18px; border: none;
-            background: transparent; color: #666; font-size: 20px; cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .nav-item.active { background: var(--surface-3); color: var(--neon-blue); }
+        .toast.show { opacity: 1; top: 30px; }
 
-        /* CHAT & NOTIFICATIONS */
-        #chat-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--surface-1); z-index: 200; transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; flex-direction: column;
-        }
-        #chat-layer.open { transform: translateX(0); }
     </style>
 </head>
 <body>
 
-    <div id="boot-terminal">
-        <div id="term-log"></div>
+    <div class="app-container">
+
+        <div id="view-home" class="view active">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1>My Tables</h1>
+                <div onclick="Router.go('settings')" style="background:var(--surface); padding:10px; border-radius:50%; cursor:pointer;">
+                    <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </div>
+            </div>
+
+            <div id="home-guest-msg" class="card hidden" style="border: 1px solid var(--primary);">
+                <b>Guest Mode</b>
+                <p>Data is saved to this device only.</p>
+            </div>
+
+            <div id="list-subjects"></div>
+            
+            <button class="btn primary" onclick="Modals.addSubject()">+ Create New Table</button>
+        </div>
+
+        <div id="view-detail" class="view">
+            <div class="back-btn" onclick="Router.go('home')">← Back</div>
+            <h1 id="dt-title">Subject</h1>
+            <p id="dt-desc" style="margin-bottom:20px;">Managing tasks</p>
+            
+            <div id="list-tasks"></div>
+            <button class="btn primary" onclick="Modals.addTask()">+ Add Goal</button>
+        </div>
+
+        <div id="view-search" class="view">
+            <h1>Search</h1>
+            <p>Find other users.</p>
+            
+            <div id="search-auth-lock" class="card hidden" style="margin-top:20px; text-align:center;">
+                <p>Sign in to search for friends.</p>
+                <button class="btn primary" onclick="Router.go('settings')">Go to Settings</button>
+            </div>
+
+            <div id="search-container">
+                <input class="inp" placeholder="Username..." oninput="Core.search(this.value)" style="margin-top:20px;">
+                <div id="list-results" style="margin-top:20px;"></div>
+            </div>
+        </div>
+
+        <div id="view-profile" class="view" style="padding-top:0;">
+            <div class="hero-container">
+                <div class="hero-banner" onclick="Core.upload('bnr')">
+                    <img id="pf-bnr" src="">
+                </div>
+                <div class="hero-avatar" onclick="Core.upload('pfp')">
+                    <img id="pf-pfp" src="">
+                </div>
+            </div>
+            
+            <div class="hero-info">
+                <h1 id="pf-name">Guest</h1>
+                <span id="pf-badge" style="background:var(--surface-highlight); padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold;">LOCAL USER</span>
+                
+                <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="card" style="text-align:center; margin:0;">
+                        <b id="stat-tables" style="font-size:20px;">0</b><br><small>Tables</small>
+                    </div>
+                    <div class="card" style="text-align:center; margin:0;">
+                        <b id="stat-fam" style="font-size:20px;">0</b><br><small>Family</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-public" class="view" style="padding-top:0;">
+            <div onclick="Router.back()" style="position:absolute; top:20px; left:20px; z-index:50; background:rgba(0,0,0,0.5); padding:8px 15px; border-radius:20px; color:white; font-weight:bold; cursor:pointer;">← Back</div>
+
+            <div class="hero-container">
+                <div class="hero-banner">
+                    <img id="pub-bnr" src="">
+                </div>
+                <div class="hero-avatar">
+                    <img id="pub-pfp" src="">
+                </div>
+            </div>
+
+            <div class="hero-info">
+                <h1 id="pub-name">User</h1>
+                <p>Public Profile</p>
+                
+                <h4 style="margin-top:30px; opacity:0.5; text-transform:uppercase; font-size:12px;">Public Tables</h4>
+                <div id="pub-list"></div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view">
+            <div class="back-btn" onclick="Router.go('home')">← Back</div>
+            <h1>Settings</h1>
+
+            <div class="card link" onclick="Router.go('family')">
+                <b>Family Center</b>
+                <p>Manage invites and connections.</p>
+            </div>
+
+            <div id="auth-section">
+                </div>
+            
+            <div class="card" style="margin-top:20px;">
+                <b>Version 4.0 Stable</b>
+                <p>Enterprise Edition</p>
+            </div>
+        </div>
+
+        <div id="view-family" class="view">
+            <div class="back-btn" onclick="Router.go('settings')">← Back</div>
+            <h1>Family Center</h1>
+
+            <div id="fam-auth-lock" class="card hidden" style="text-align:center;">
+                <p>Sign in to add family.</p>
+            </div>
+
+            <div id="fam-content">
+                <div class="card">
+                    <b>Send Invite</b>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <input id="fam-inp" class="inp" placeholder="Username">
+                        <button class="btn primary" style="width:80px; margin:0;" onclick="Core.sendInvite()">Send</button>
+                    </div>
+                </div>
+
+                <div id="fam-invites-box" class="hidden">
+                    <h4 style="color:var(--primary); margin:20px 0 10px 0;">REQUESTS</h4>
+                    <div id="list-invites"></div>
+                </div>
+
+                <h4 style="opacity:0.5; margin:30px 0 10px 0;">MY FAMILY</h4>
+                <div id="list-family"></div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="app-viewport" style="display:none;">
-        <div id="main-view" class="view-container"></div>
-        
-        <div class="nav-dock">
-            <button class="nav-item active" onclick="Router.nav('dashboard')">⌂</button>
-            <button class="nav-item" onclick="Router.nav('courses')">📚</button>
-            <button class="nav-item" onclick="Router.nav('family')">⚡</button>
-            <button class="nav-item" onclick="Router.nav('canvas')">✎</button>
+    <div id="dock" class="dock">
+        <div class="dock-item active" onclick="Router.go('home')">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </div>
+        <div class="dock-item" onclick="Router.go('search')">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </div>
+        <div class="dock-item" onclick="Router.go('profile')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
         </div>
     </div>
 
-    <div id="chat-layer"></div>
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <h2 id="m-title">Title</h2>
+            <div id="m-body"></div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="m-btn-ok" class="btn primary">OK</button>
+                <button class="btn" onclick="Modals.close()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        /* --- CONFIGURATION --- */
-        // 🔴 REPLACE THIS WITH YOUR FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
-        };
+    <div id="toast" class="toast">Notification</div>
+    <input type="file" id="f-upl" hidden onchange="Core.processUpload(this)">
 
-        // Initialize Firebase safely
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        } else if (typeof firebase === 'undefined') {
-            console.error("Firebase SDK not loaded. Check internet connection.");
+<script>
+    // --- CONFIG ---
+    const CFG = { 
+        apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", 
+        projectId: "syllabuspro-4ec5c", 
+        databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+    };
+    firebase.initializeApp(CFG);
+    const DB = firebase.database();
+    
+    // --- STATE ---
+    const State = {
+        user: localStorage.getItem('syl_u'),
+        pass: localStorage.getItem('syl_p'),
+        data: null, // Holds subjects, family, etc.
+        curSubIdx: 0,
+        defaults: {
+            bnr: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+            pfp: 'https://api.dicebear.com/7.x/initials/svg?seed='
         }
+    };
 
-        /* --- MODULE: DATA KERNEL --- */
-        class DataKernel {
-            constructor() {
-                this.db = typeof firebase !== 'undefined' ? firebase.database() : null;
-                this.uid = localStorage.getItem('titan_uid') || null;
-                this.mode = this.uid ? 'online' : 'guest';
-            }
-
-            async login(email, pass) {
-                // Simplified Login Simulation for V10
-                // In production, use firebase.auth().signInWithEmailAndPassword
-                // Here we just mock a user ID for the study group
-                if(email && pass) {
-                    // Create a deterministic ID based on username for search capability
-                    const mockUid = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-                    this.uid = mockUid;
-                    localStorage.setItem('titan_uid', mockUid);
-                    
-                    // Register Username in public index (for Search)
-                    if(this.db) {
-                        this.db.ref('usernames/' + mockUid).set(mockUid);
-                    }
-                    
-                    window.location.reload();
-                }
-            }
-
-            logout() {
-                localStorage.removeItem('titan_uid');
-                window.location.reload();
-            }
-
-            // Generic Data Fetcher
-            async get(path) {
-                if(this.mode === 'guest') {
-                    return JSON.parse(localStorage.getItem(path) || 'null');
-                }
-                const snap = await this.db.ref(`users/${this.uid}/${path}`).once('value');
-                return snap.val();
-            }
-
-            // Generic Data Setter
-            async set(path, data) {
-                if(this.mode === 'guest') {
-                    localStorage.setItem(path, JSON.stringify(data));
-                    return;
-                }
-                await this.db.ref(`users/${this.uid}/${path}`).set(data);
-            }
-        }
-
-        const Kernel = new DataKernel();
-
-        /* --- MODULE: SOCIAL ENGINE --- */
-        const Social = {
-            activeChat: null,
-            listener: null,
-
-            async searchUsers(query) {
-                if(Kernel.mode === 'guest') return [];
-                const snap = await Kernel.db.ref('usernames').limitToFirst(20).once('value');
-                const results = [];
-                snap.forEach(c => {
-                    if(c.key.toLowerCase().includes(query.toLowerCase())) results.push({ user: c.key, uid: c.val() });
-                });
-                return results;
-            },
-
-            async openChat(targetUid, targetName) {
-                const chatLayer = document.getElementById('chat-layer');
-                chatLayer.innerHTML = `
-                    <div style="padding:15px; background:var(--surface-2); border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
-                        <button class="btn btn-ghost btn-sm" onclick="Social.closeChat()">← Back</button>
-                        <span class="h3">${targetName}</span>
-                        <div style="width:30px;"></div>
-                    </div>
-                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px;">
-                        <div class="spinner" style="margin:auto"></div>
-                    </div>
-                    <div style="padding:15px; background:var(--surface-1); border-top:1px solid var(--glass-border); display:flex; gap:10px;">
-                        <input id="chat-msg" class="input-field" placeholder="Type message..." style="height:45px;">
-                        <button class="btn btn-primary" style="width:50px; height:45px;" onclick="Social.send()">➤</button>
-                    </div>
-                `;
-                chatLayer.classList.add('open');
-                this.activeChat = targetUid;
-
-                const myUid = Kernel.uid;
-                const chatId = [myUid, targetUid].sort().join('_');
-
-                const feed = document.getElementById('chat-feed');
-                this.listener = Kernel.db.ref(`chats/${chatId}`).limitToLast(50);
-                
-                this.listener.on('value', (snap) => {
-                    feed.innerHTML = '';
-                    if(!snap.exists()) {
-                        feed.innerHTML = '<div style="margin:auto; opacity:0.5">Secure Channel Open.<br>Start messaging.</div>';
-                        return;
-                    }
-                    const msgs = [];
-                    snap.forEach(s => msgs.push(s.val()));
-                    msgs.forEach(m => {
-                        const isMe = m.sender === myUid;
-                        const bubble = document.createElement('div');
-                        bubble.style.cssText = `
-                            max-width: 75%; padding: 10px 16px; border-radius: 20px; font-size: 15px;
-                            align-self: ${isMe ? 'flex-end' : 'flex-start'};
-                            background: ${isMe ? 'var(--neon-blue)' : 'var(--surface-3)'};
-                            color: ${isMe ? 'white' : '#ccc'};
-                            border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;
-                        `;
-                        bubble.innerText = m.text;
-                        feed.appendChild(bubble);
-                    });
-                    feed.scrollTop = feed.scrollHeight;
-                });
-            },
-
-            send() {
-                const inp = document.getElementById('chat-msg');
-                const txt = inp.value.trim();
-                if(!txt || !this.activeChat) return;
-                const chatId = [Kernel.uid, this.activeChat].sort().join('_');
-                Kernel.db.ref(`chats/${chatId}`).push({ sender: Kernel.uid, text: txt, ts: Date.now() });
-                inp.value = '';
-            },
-
-            closeChat() {
-                document.getElementById('chat-layer').classList.remove('open');
-                if(this.listener) this.listener.off();
-                this.activeChat = null;
-            }
-        };
-
-        /* --- MODULE: WHITEBOARD ENGINE --- */
-        const Whiteboard = {
-            canvas: null, ctx: null, isDrawing: false, color: '#00f3ff',
-            init() {
-                setTimeout(() => {
-                    this.canvas = document.getElementById('wb-canvas');
-                    if(!this.canvas) return;
-                    this.ctx = this.canvas.getContext('2d');
-                    this.resize();
-                    const events = ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend'];
-                    events.forEach(e => this.canvas.addEventListener(e, (evt) => this.handle(evt), {passive: false}));
-                    window.addEventListener('resize', () => this.resize());
-                }, 100);
-            },
-            resize() {
-                if(!this.canvas) return;
-                const parent = this.canvas.parentElement;
-                this.canvas.width = parent.clientWidth;
-                this.canvas.height = parent.clientHeight;
-                this.ctx.lineWidth = 3; this.ctx.lineCap = 'round'; this.ctx.strokeStyle = this.color;
-            },
-            handle(e) {
-                if(!this.canvas) return;
-                e.preventDefault();
-                const rect = this.canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-
-                if (e.type === 'mousedown' || e.type === 'touchstart') {
-                    this.isDrawing = true; this.ctx.beginPath(); this.ctx.moveTo(x, y);
-                } else if (e.type === 'mouseup' || e.type === 'touchend') {
-                    this.isDrawing = false;
-                } else if (this.isDrawing) {
-                    this.ctx.lineTo(x, y); this.ctx.stroke();
-                }
-            },
-            setColor(c) { this.color = c; if(this.ctx) this.ctx.strokeStyle = c; },
-            wipe() { if(this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
-        };
-
-        /* --- VIEWS --- */
-        const Views = {
-            dashboard: async () => {
-                const user = Kernel.uid || "GUEST";
-                const isGuest = Kernel.mode === 'guest';
-                
-                return `
-                    <h1 class="h1 gradient-text">Command Center</h1>
-                    
-                    ${isGuest ? `
-                    <div class="card card-glass" style="border-color:var(--neon-red);">
-                        <h3 class="h3" style="color:var(--neon-red)">⚠ OFFLINE MODE</h3>
-                        <p class="text-dim">Data is saved locally. Login to sync with squad.</p>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <input id="login-id" class="input-field" placeholder="Username (e.g. agent007)">
-                            <button class="btn btn-primary" onclick="Kernel.login(document.getElementById('login-id').value, 'nopass')">LOGIN</button>
-                        </div>
-                    </div>` : `
-                    <div class="card card-glass">
-                        <div style="display:flex; justify-content:space-between;">
-                            <span class="h3" style="color:var(--neon-green)">● ONLINE</span>
-                            <span class="text-mono">ID: ${user.toUpperCase()}</span>
-                        </div>
-                        <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="Kernel.logout()">LOGOUT</button>
-                    </div>`}
-
-                    <div class="card">
-                        <span class="h3">System Stats</span>
-                        <div style="display:flex; justify-content:space-between; margin-top:15px;">
-                            <div style="text-align:center">
-                                <div class="h1" style="color:var(--neon-blue)">0</div>
-                                <div class="text-mono">TASKS</div>
-                            </div>
-                            <div style="text-align:center">
-                                <div class="h1" style="color:var(--neon-purple)">0</div>
-                                <div class="text-mono">COURSES</div>
-                            </div>
-                            <div style="text-align:center">
-                                <div class="h1" style="color:white">100%</div>
-                                <div class="text-mono">HEALTH</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            },
-
-            courses: async () => {
-                // Simplified for brevity - expandable
-                return `
-                    <h1 class="h1 gradient-text">Subject Database</h1>
-                    <div class="card card-glass">
-                        <p class="text-dim">No subjects loaded in database.</p>
-                        <button class="btn btn-primary">＋ New Subject</button>
-                    </div>
-                `;
-            },
-
-            family: async () => {
-                if(Kernel.mode === 'guest') {
-                    return `<div style="text-align:center; padding-top:50px;"><h2 class="h2" style="color:var(--neon-red)">OFFLINE</h2><p class="text-dim">Login required for network access.</p></div>`;
-                }
-                return `
-                    <h1 class="h1 gradient-text">Network</h1>
-                    <div class="card card-glass">
-                        <span class="text-mono">USER SEARCH</span>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <input id="search-u" class="input-field" placeholder="Find agent...">
-                            <button class="btn btn-primary" style="width:auto" onclick="window.renderSearch()">Scan</button>
-                        </div>
-                        <div id="search-res" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
-                    </div>
-                `;
-            },
-
-            canvas: async () => {
-                setTimeout(() => Whiteboard.init(), 50);
-                return `
-                    <div style="height:100%; display:flex; flex-direction:column;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <h1 class="h1 gradient-text" style="margin:0">Canvas</h1>
-                            <div style="display:flex; gap:5px;">
-                                <div onclick="Whiteboard.setColor('#00f3ff')" style="width:20px; height:20px; background:var(--neon-blue); border-radius:50%; border:1px solid white; cursor:pointer;"></div>
-                                <div onclick="Whiteboard.setColor('#ff003c')" style="width:20px; height:20px; background:var(--neon-red); border-radius:50%; border:1px solid white; cursor:pointer;"></div>
-                                <div onclick="Whiteboard.setColor('#ffffff')" style="width:20px; height:20px; background:white; border-radius:50%; border:1px solid white; cursor:pointer;"></div>
-                            </div>
-                        </div>
-                        <div class="card card-glass" style="flex:1; padding:0; overflow:hidden; position:relative; touch-action:none;">
-                            <canvas id="wb-canvas" style="width:100%; height:100%; display:block;"></canvas>
-                            <button class="btn btn-ghost" onclick="Whiteboard.wipe()" style="position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid var(--neon-red); color:var(--neon-red);">✖ CLEAR</button>
-                        </div>
-                    </div>
-                `;
-            }
-        };
-
-        // Helper for Search View
-        window.renderSearch = async () => {
-            const q = document.getElementById('search-u').value;
-            if(!q) return;
-            const res = await Social.searchUsers(q);
-            const box = document.getElementById('search-res');
-            box.innerHTML = res.length ? '' : '<span class="text-dim">No targets found.</span>';
+    // --- UI ROUTER ---
+    const Router = {
+        go: (id) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-'+id).classList.add('active');
             
-            res.forEach(r => {
-                if(r.uid === Kernel.uid) return;
-                const el = document.createElement('div');
-                el.className = 'card card-interactive';
-                el.style.marginBottom = '0'; el.style.padding = '10px';
-                el.style.display = 'flex'; el.style.justifyContent = 'space-between'; el.style.alignItems = 'center';
-                el.innerHTML = '<b>' + r.user + '</b><span class="text-mono" style="color:var(--neon-green)">CONNECT</span>';
-                el.onclick = () => Social.openChat(r.uid, r.user);
-                box.appendChild(el);
-            });
-        };
+            // Dock visibility
+            const dock = document.getElementById('dock');
+            if(['detail','settings','family','public','auth'].includes(id)) dock.style.display = 'none';
+            else dock.style.display = 'flex';
 
-        /* --- ROUTER & UI --- */
-        const Router = {
-            async nav(viewName) {
-                const main = document.getElementById('main-view');
-                main.innerHTML = '<div class="spinner"></div>';
+            // Checks
+            if(id === 'search' && !State.user) {
+                document.getElementById('search-auth-lock').classList.remove('hidden');
+                document.getElementById('search-container').classList.add('hidden');
+            } else if(id === 'search') {
+                document.getElementById('search-auth-lock').classList.add('hidden');
+                document.getElementById('search-container').classList.remove('hidden');
+            }
+
+            if(id === 'family' && !State.user) {
+                document.getElementById('fam-auth-lock').classList.remove('hidden');
+                document.getElementById('fam-content').classList.add('hidden');
+            } else if (id === 'family') {
+                document.getElementById('fam-auth-lock').classList.add('hidden');
+                document.getElementById('fam-content').classList.remove('hidden');
+            }
+        },
+        back: () => Router.go('search')
+    };
+
+    // --- CORE LOGIC ---
+    const Core = {
+        init: () => {
+            if(State.user) {
+                // Cloud Mode
+                DB.ref('users/'+State.user).on('value', snap => {
+                    const val = snap.val();
+                    if(val && val.pass === State.pass) {
+                        State.data = val;
+                        Core.render();
+                    } else {
+                        Core.logout(); // Invalid creds
+                    }
+                });
+            } else {
+                // Guest Mode
+                const local = localStorage.getItem('syl_local');
+                State.data = local ? JSON.parse(local) : { subjects:[], user:'Guest' };
+                document.getElementById('home-guest-msg').classList.remove('hidden');
+                Core.render();
+            }
+            Core.renderSettings();
+        },
+
+        save: () => {
+            if(State.user) {
+                // Save to Cloud
+                DB.ref('users/'+State.user).update(State.data);
+            } else {
+                // Save to Local
+                localStorage.setItem('syl_local', JSON.stringify(State.data));
+                Core.render();
+            }
+        },
+
+        render: () => {
+            const d = State.data;
+            const def = State.defaults;
+
+            // Profile UI
+            document.getElementById('pf-name').innerText = d.user || 'Guest';
+            document.getElementById('pf-bnr').src = d.bnr || def.bnr;
+            document.getElementById('pf-pfp').src = d.pfp || (def.pfp + (d.user||'G'));
+            
+            document.getElementById('stat-tables').innerText = (d.subjects||[]).length;
+            document.getElementById('stat-fam').innerText = (d.family||[]).length;
+
+            if(State.user) {
+                document.getElementById('pf-badge').innerText = "CLOUD USER";
+                document.getElementById('pf-badge').style.background = "var(--primary)";
+                document.getElementById('pf-badge').style.color = "white";
+            }
+
+            // Tables List
+            const list = document.getElementById('list-subjects');
+            if(!d.subjects || !d.subjects.length) {
+                list.innerHTML = `<div style="text-align:center; opacity:0.5; padding:40px;">No tables yet.</div>`;
+            } else {
+                list.innerHTML = d.subjects.map((s, i) => `
+                    <div class="card link" onclick="Core.openSub(${i})">
+                        <b>${s.name}</b>
+                        <div style="font-size:13px; opacity:0.7; margin-top:5px;">${(s.tasks||[]).length} Goals</div>
+                    </div>
+                `).join('');
+            }
+
+            // Family Lists
+            if(State.user) {
+                const inv = d.invites || [];
+                const fam = d.family || [];
                 
-                // Update active tab style
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                const btnIndex = ['dashboard','courses','family','canvas'].indexOf(viewName);
-                if(btnIndex > -1) document.querySelectorAll('.nav-item')[btnIndex].classList.add('active');
-
-                // Render
-                if(Views[viewName]) {
-                    main.innerHTML = await Views[viewName]();
+                const invBox = document.getElementById('fam-invites-box');
+                if(inv.length) {
+                    invBox.classList.remove('hidden');
+                    document.getElementById('list-invites').innerHTML = inv.map(n => `
+                        <div class="card">
+                            <b>${n}</b>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button class="btn primary" style="margin:0; padding:8px;" onclick="Core.reply('${n}',true)">Accept</button>
+                                <button class="btn danger" style="margin:0; padding:8px;" onclick="Core.reply('${n}',false)">Deny</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    invBox.classList.add('hidden');
                 }
-            }
-        };
 
-        /* --- BOOT SEQUENCE --- */
-        const BootLoader = {
-            init() {
-                const term = document.getElementById('term-log');
-                const log = (txt) => { term.innerHTML += `> ${txt}<br>`; };
+                document.getElementById('list-family').innerHTML = fam.length ? fam.map(f => `
+                    <div class="card link" onclick="Core.viewPublic('${f}')">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:10px; height:10px; background:var(--primary); border-radius:50%;"></div>
+                            <b>${f}</b>
+                        </div>
+                    </div>
+                `).join('') : '<div style="opacity:0.5;">No family yet.</div>';
+            }
+        },
+
+        openSub: (i) => {
+            State.curSubIdx = i;
+            const sub = State.data.subjects[i];
+            document.getElementById('dt-title').innerText = sub.name;
+            document.getElementById('dt-desc').innerText = (sub.tasks||[]).length + " Goals";
+            document.getElementById('list-tasks').innerHTML = (sub.tasks||[]).map(t => `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>${t.desc}</b>
+                        <small style="color:var(--primary)">${t.date}</small>
+                    </div>
+                </div>
+            `).join('');
+            Router.go('detail');
+        },
+
+        // --- AUTH ---
+        login: async () => {
+            const u = document.getElementById('au-u').value.trim();
+            const p = document.getElementById('au-p').value.trim();
+            if(!u || !p) return;
+            
+            const snap = await DB.ref('users/'+u).once('value');
+            if(snap.exists() && snap.val().pass === p) {
+                localStorage.setItem('syl_u', u);
+                localStorage.setItem('syl_p', p);
+                location.reload();
+            } else {
+                Toast.show("Invalid Credentials");
+            }
+        },
+        signup: async () => {
+            const u = document.getElementById('au-u').value.trim();
+            const p = document.getElementById('au-p').value.trim();
+            if(!u || !p) return;
+
+            const snap = await DB.ref('users/'+u).once('value');
+            if(snap.exists()) return Toast.show("Username taken");
+
+            // Merge local data if creating account
+            const startData = State.data;
+            startData.user = u;
+            startData.pass = p;
+            
+            await DB.ref('users/'+u).set(startData);
+            localStorage.setItem('syl_u', u);
+            localStorage.setItem('syl_p', p);
+            location.reload();
+        },
+        logout: () => {
+            localStorage.removeItem('syl_u');
+            localStorage.removeItem('syl_p');
+            location.reload();
+        },
+
+        renderSettings: () => {
+            const el = document.getElementById('auth-section');
+            if(State.user) {
+                el.innerHTML = `
+                    <div class="card">
+                        <b>Logged in as ${State.user}</b>
+                        <button class="btn danger" onclick="Core.logout()">Log Out</button>
+                    </div>
+                `;
+            } else {
+                el.innerHTML = `
+                    <div class="card">
+                        <b>Account</b>
+                        <p style="margin-bottom:10px;">Sign in to sync & use family features.</p>
+                        <input id="au-u" class="inp" placeholder="Username" style="margin-bottom:10px;">
+                        <input id="au-p" class="inp" type="password" placeholder="Password">
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn primary" onclick="Core.login()">Login</button>
+                            <button class="btn" onclick="Core.signup()">Sign Up</button>
+                        </div>
+                    </div>
+                `;
+            }
+        },
+
+        // --- PUBLIC & SEARCH ---
+        search: async (q) => {
+            if(!q) return;
+            const res = document.getElementById('list-results');
+            res.innerHTML = "Searching...";
+            const snap = await DB.ref('users').once('value');
+            let html = "";
+            snap.forEach(c => {
+                const u = c.val();
+                if(u.user && u.user.toLowerCase().includes(q.toLowerCase())) {
+                    html += `<div class="card link" onclick="Core.viewPublic('${u.user}')"><b>${u.user}</b></div>`;
+                }
+            });
+            res.innerHTML = html || "No results.";
+        },
+        viewPublic: async (who) => {
+            const snap = await DB.ref('users/'+who).once('value');
+            if(!snap.exists()) return;
+            const d = snap.val();
+            
+            document.getElementById('pub-name').innerText = d.user;
+            document.getElementById('pub-bnr').src = d.bnr || State.defaults.bnr;
+            document.getElementById('pub-pfp').src = d.pfp || State.defaults.pfp + d.user;
+            
+            const list = document.getElementById('pub-list');
+            if(d.subjects) {
+                list.innerHTML = d.subjects.map(s => `<div class="card"><b>${s.name}</b><br><small>${(s.tasks||[]).length} Goals</small></div>`).join('');
+            } else {
+                list.innerHTML = "No tables.";
+            }
+            Router.go('public');
+        },
+
+        // --- FAMILY ---
+        sendInvite: async () => {
+            const target = document.getElementById('fam-inp').value;
+            if(!target || target === State.user) return Toast.show("Invalid User");
+            
+            const ref = DB.ref('users/'+target+'/invites');
+            const s = await ref.once('value');
+            let arr = s.val() || [];
+            if(arr.includes(State.user)) return Toast.show("Already sent");
+            
+            arr.push(State.user);
+            await ref.set(arr);
+            Toast.show("Invite Sent");
+        },
+        reply: async (who, yes) => {
+            let inv = State.data.invites.filter(x => x !== who);
+            State.data.invites = inv;
+            
+            if(yes) {
+                State.data.family = State.data.family || [];
+                State.data.family.push(who);
                 
-                log("INIT_KERNEL_V10...");
-                setTimeout(() => log("LOADING_MODULES... OK"), 300);
-                setTimeout(() => log("CONNECTING_DB... " + (Kernel.db ? "SECURE" : "OFFLINE")), 800);
-                setTimeout(() => {
-                    document.getElementById('boot-terminal').style.display = 'none';
-                    const app = document.getElementById('app-viewport');
-                    app.style.display = 'flex';
-                    setTimeout(() => app.style.opacity = 1, 50);
-                    Router.nav('dashboard');
-                }, 1500);
+                // Add me to them
+                const r2 = DB.ref('users/'+who+'/family');
+                const s2 = await r2.once('value');
+                let f2 = s2.val() || [];
+                f2.push(State.user);
+                await r2.set(f2);
             }
-        };
+            Core.save();
+        },
 
-        // START APP
-        window.onload = () => BootLoader.init();
+        // --- UPLOADS ---
+        upload: (t) => { if(State.user) { State.upType=t; document.getElementById('f-upl').click(); } else { Toast.show("Login needed"); } },
+        processUpload: (e) => {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                State.data[State.upType] = ev.target.result;
+                Core.save();
+            };
+            r.readAsDataURL(e.files[0]);
+        }
+    };
 
-    </script>
+    // --- MODALS ---
+    const Modals = {
+        addSubject: () => {
+            const m = document.getElementById('modal-overlay');
+            document.getElementById('m-title').innerText = "New Table";
+            document.getElementById('m-body').innerHTML = `<input id="m-inp" class="inp" placeholder="Name">`;
+            m.style.display = 'flex';
+            document.getElementById('m-btn-ok').onclick = () => {
+                const n = document.getElementById('m-inp').value;
+                if(n) {
+                    State.data.subjects = State.data.subjects || [];
+                    State.data.subjects.push({name:n, tasks:[]});
+                    Core.save();
+                    Modals.close();
+                }
+            };
+        },
+        addTask: () => {
+            const m = document.getElementById('modal-overlay');
+            document.getElementById('m-title').innerText = "New Goal";
+            document.getElementById('m-body').innerHTML = `<input id="m-inp" class="inp" placeholder="Task"><input id="m-date" type="date" class="inp" style="margin-top:10px;">`;
+            m.style.display = 'flex';
+            document.getElementById('m-btn-ok').onclick = () => {
+                const t = document.getElementById('m-inp').value;
+                const d = document.getElementById('m-date').value;
+                if(t) {
+                    State.data.subjects[State.curSubIdx].tasks.push({desc:t, date:d});
+                    Core.save();
+                    Core.openSub(State.curSubIdx);
+                    Modals.close();
+                }
+            };
+        },
+        close: () => document.getElementById('modal-overlay').style.display = 'none'
+    };
+
+    const Toast = { show: (msg) => { const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } };
+
+    // --- START ---
+    window.onload = Core.init;
+
+</script>
 </body>
 </html>
