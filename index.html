@@ -3,46 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SyllabusStudy</title>
+    <title>SyllabusStudy Pro</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { 
-            --glass: rgba(255, 255, 255, 0.1);
-            --border: rgba(255, 255, 255, 0.2);
-            --blur: blur(40px) saturate(200%);
-        }
-
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
-        .wallpaper { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at top right, #1a1c2c, #000); }
-
-        .screen { position: absolute; inset: 0; padding: 60px 25px 120px; opacity: 0; transform: scale(0.98); pointer-events: none; transition: 0.4s; overflow-y: auto; }
-        .screen-active { opacity: 1; transform: scale(1); pointer-events: auto; }
-
-        .glass-panel { background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 0.5px solid var(--border); border-radius: 28px; padding: 20px; margin-bottom: 15px; }
+        :root { --glass: rgba(255,255,255,0.1); --border: rgba(255,255,255,0.2); }
+        body, html { margin:0; padding:0; background:#000; color:#fff; font-family:-apple-system, sans-serif; height:100vh; overflow:hidden; }
+        .wallpaper { position:fixed; inset:0; z-index:-1; background:radial-gradient(circle at top right, #1a1c2c, #000); }
         
-        /* PROFILE */
-        .banner { width: 100%; height: 160px; border-radius: 25px; object-fit: cover; border: 0.5px solid var(--border); background: #222; }
-        .pfp-wrap { width: 90px; height: 90px; border-radius: 25px; border: 4px solid #000; margin-top: -45px; margin-left: 20px; overflow: hidden; background: #333; position: relative; }
-        .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .screen { position:absolute; inset:0; padding:60px 25px 120px; opacity:0; transform:scale(0.98); pointer-events:none; transition:0.4s; overflow-y:auto; }
+        .screen-active { opacity:1; transform:scale(1); pointer-events:auto; }
+
+        .glass-panel { background:var(--glass); backdrop-filter:blur(30px); border:0.5px solid var(--border); border-radius:25px; padding:20px; margin-bottom:15px; }
         
-        .can-edit { cursor: pointer; transition: 0.3s; }
-        .can-edit:hover { filter: brightness(1.2); border-color: #fff; }
+        /* Profile UI */
+        .banner { width:100%; height:140px; border-radius:20px; object-fit:cover; background:#222; }
+        .pfp-wrap { width:80px; height:80px; border-radius:20px; border:4px solid #000; margin-top:-40px; margin-left:20px; overflow:hidden; background:#333; }
+        .pfp-wrap img { width:100%; height:100%; object-fit:cover; }
 
-        .search-wrap { display: flex; gap: 10px; background: rgba(255,255,255,0.1); border: 0.5px solid var(--border); border-radius: 20px; padding: 10px 15px; align-items: center; }
-        .search-wrap input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
+        /* Search Bar */
+        .search-box { display:flex; background:rgba(255,255,255,0.1); border-radius:15px; padding:10px 15px; border:0.5px solid var(--border); }
+        .search-box input { background:transparent; border:none; color:#fff; flex:1; outline:none; font-size:16px; }
+        .search-btn { background:#fff; color:#000; border:none; border-radius:8px; padding:5px 12px; font-weight:700; cursor:pointer; }
 
-        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; }
-        .btn-main { background: #fff; color: #000; width: 100%; }
-        .btn-glass { background: var(--glass); color: #fff; border: 0.5px solid var(--border); }
+        .btn { width:100%; padding:18px; border-radius:18px; border:none; font-weight:700; cursor:pointer; margin-top:10px; }
+        .btn-white { background:#fff; color:#000; }
+        .btn-glass { background:var(--glass); color:#fff; border:0.5px solid var(--border); }
 
-        .dock { position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px; background: rgba(255,255,255,0.1); backdrop-filter: blur(25px); border: 0.5px solid var(--border); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .nav-item.active { color: #fff; }
+        .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:30px; display:flex; justify-content:space-around; align-items:center; border:0.5px solid var(--border); }
+        .nav-item { opacity:0.4; font-size:11px; font-weight:800; cursor:pointer; }
+        .nav-item.active { opacity:1; }
 
-        .result-item { padding: 15px; border-radius: 18px; background: rgba(255,255,255,0.07); margin-top: 8px; display: flex; align-items: center; gap: 12px; border: 0.5px solid var(--border); }
+        .result-card { background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; margin-top:10px; display:flex; align-items:center; gap:12px; border:0.5px solid var(--border); cursor:pointer; }
     </style>
 </head>
 <body>
@@ -50,62 +44,61 @@
     <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size: 44px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
-        <div id="table-display"></div>
-        <button class="btn btn-main" onclick="core.createTable()">+ New Subject</button>
+        <h1 style="font-size:38px; font-weight:900;">Home</h1>
+        <div id="table-list"></div>
+        <button class="btn btn-white" onclick="core.newSubject()">+ New Subject</button>
     </div>
 
     <div id="view-detail" class="screen">
-        <button class="btn btn-glass" onclick="ui.show('home')" style="padding: 10px 20px; margin-bottom: 20px;">← Back</button>
-        <h2 id="det-name" style="font-size: 32px; margin: 0; font-weight: 800;"></h2>
-        <div id="task-list" style="margin: 20px 0;"></div>
-        <button class="btn btn-main" onclick="core.addTask()">+ Add Goal</button>
-        <button class="btn btn-glass" onclick="core.deleteTable()" style="margin-top:10px; color:#ff3b30; width:100%;">Delete Subject</button>
+        <button class="btn btn-glass" onclick="ui.show('home')" style="width:auto; padding:8px 15px;">← Back</button>
+        <h2 id="active-title" style="font-size:32px; margin-top:15px;"></h2>
+        <div id="task-list"></div>
+        <button class="btn btn-white" onclick="core.addTask()">+ Add Goal</button>
     </div>
 
     <div id="view-search" class="screen">
-        <div class="search-wrap">
-            <input type="text" id="sq" placeholder="Search Subjects, Goals, or Users..." onkeydown="if(event.key==='Enter') core.search()">
-            <button onclick="core.search()" style="background:#fff; border:none; border-radius:12px; padding:8px 15px; font-weight:700; cursor:pointer;">Search</button>
+        <div class="search-box">
+            <input type="text" id="search-q" placeholder="Search users or subjects..." onkeydown="if(event.key==='Enter') core.doSearch()">
+            <button class="search-btn" onclick="core.doSearch()">Search</button>
         </div>
-        <div id="search-results" style="margin-top: 20px;"></div>
+        <div id="search-results" style="margin-top:20px;"></div>
     </div>
 
-    <div id="view-profile" class="screen" style="padding: 0 0 120px;">
-        <img id="p-banner" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800" class="banner" onclick="core.triggerUpload('banner')">
-        <div id="p-pfp-wrap" class="pfp-wrap" onclick="core.triggerUpload('pfp')">
-            <img id="p-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest">
+    <div id="view-profile" class="screen" style="padding:0 0 100px;">
+        <img id="u-banner" src="https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800" class="banner" onclick="core.up('bnr')">
+        <div class="pfp-wrap" onclick="core.up('pfp')">
+            <img id="u-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest">
         </div>
-        <div style="padding: 20px;">
-            <h1 id="un-display" style="margin:0; font-size:38px; font-weight:800;">Guest</h1>
-            <p id="profile-tag" style="opacity:0.5; margin-bottom: 30px;">Local Session</p>
-            <div id="guest-controls">
-                <button class="btn btn-main" onclick="ui.openAuth('signup')">Sign up to edit profile</button>
-                <button class="btn btn-glass" style="width:100%; margin-top:10px" onclick="ui.openAuth('login')">Sync Account</button>
+        <div style="padding:20px;">
+            <h1 id="u-name" style="margin:0;">Guest</h1>
+            <div id="auth-box">
+                <button class="btn btn-white" onclick="ui.auth('signup')">Sign Up</button>
+                <button class="btn btn-glass" onclick="ui.auth('login')">Log In</button>
             </div>
-            <button id="logout-btn" class="btn btn-glass" style="display:none; color:#ff3b30; width:100%;" onclick="core.logout()">Log Out</button>
+            <button id="logout-btn" class="btn btn-glass" style="display:none; color:red;" onclick="core.logout()">Log Out</button>
         </div>
     </div>
 
-    <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); z-index:9000; display:none; align-items:center; justify-content:center; padding:25px;">
-        <div class="glass-panel" style="width:100%; max-width:320px;">
-            <h2 id="m-title" style="margin-top:0">Auth</h2>
-            <input type="text" id="au" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:#fff; margin-bottom:10px;" placeholder="Username">
-            <input type="password" id="ap" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:#fff; margin-bottom:15px;" placeholder="Password">
-            <button class="btn btn-main" onclick="core.authConfirm()">Continue</button>
-            <button class="btn btn-glass" style="width:100%; margin-top:10px;" onclick="ui.closeModal()">Cancel</button>
+    <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div class="glass-panel" style="width:100%; max-width:300px;">
+            <h2 id="m-head">Auth</h2>
+            <input type="text" id="m-u" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; background:#111; color:#fff; border:1px solid #333;" placeholder="Username">
+            <input type="password" id="m-p" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; background:#111; color:#fff; border:1px solid #333;" placeholder="Password">
+            <button class="btn btn-white" onclick="core.authGo()">Continue</button>
+            <button onclick="ui.closeM()" style="background:none; border:none; color:gray; width:100%; margin-top:10px;">Cancel</button>
         </div>
     </div>
 
-    <input type="file" id="file-in" style="display:none" accept="image/*" onchange="core.handleFile(this)">
+    <input type="file" id="f-in" style="display:none" onchange="core.file(this)">
 
     <nav class="dock">
-        <div class="nav-item active" onclick="ui.show('home', this)">Home</div>
-        <div class="nav-item" onclick="ui.show('search', this)">Search</div>
-        <div class="nav-item" onclick="ui.show('profile', this)">Profile</div>
+        <div class="nav-item active" onclick="ui.show('home', this)">HOME</div>
+        <div class="nav-item" onclick="ui.show('search', this)">SEARCH</div>
+        <div class="nav-item" onclick="ui.show('profile', this)">PROFILE</div>
     </nav>
 
 <script>
+    // 1. Setup Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -114,139 +107,129 @@
       storageBucket: "syllabuspro-4ec5c.firebasestorage.app"
     };
     firebase.initializeApp(firebaseConfig);
-    const rtdb = firebase.database();
+    const db = firebase.database();
 
-    let db = {
-        user: localStorage.getItem('ss_u'),
-        tables: JSON.parse(localStorage.getItem('ss_t')) || [],
+    // 2. Data State
+    let state = {
+        user: localStorage.getItem('ss_user'),
+        tables: JSON.parse(localStorage.getItem('ss_tables')) || [],
         pfp: localStorage.getItem('ss_pfp'),
         banner: localStorage.getItem('ss_bnr'),
-        activeTable: null
+        cur: null
     };
 
     const ui = {
         show(id, el) {
-            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('screen-active'));
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
             document.getElementById('view-'+id).classList.add('screen-active');
-            if(el) { document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
+            if(el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
         },
-        openAuth(m) { core.authMode = m; document.getElementById('m-title').innerText = m==='signup'?'Sign Up':'Log In'; document.getElementById('modal').style.display='flex'; },
-        closeModal() { document.getElementById('modal').style.display='none'; },
-        renderHome() {
-            const container = document.getElementById('table-display');
-            container.innerHTML = db.tables.map((t, i) => `
-                <div class="glass-panel" onclick="core.openTable(${i})">
-                    <div style="font-size:24px; font-weight:800;">${t.name}</div>
-                    <div style="opacity:0.5; font-size:12px;">${t.tasks ? t.tasks.length : 0} Goals</div>
+        auth(m) { core.mode=m; document.getElementById('m-head').innerText=m; document.getElementById('modal').style.display='flex'; },
+        closeM() { document.getElementById('modal').style.display='none'; },
+        render() {
+            document.getElementById('table-list').innerHTML = state.tables.map((t,i) => `
+                <div class="glass-panel" onclick="core.open(${i})">
+                    <div style="font-size:20px; font-weight:800;">${t.name}</div>
+                    <div style="opacity:0.5;">${(t.tasks||[]).length} Goals</div>
                 </div>
             `).join('');
         }
     };
 
     const core = {
-        authMode: 'login', uploadMode: '',
+        mode: '', upMode: '',
         async save() {
-            localStorage.setItem('ss_u', db.user || "");
-            localStorage.setItem('ss_t', JSON.stringify(db.tables));
-            localStorage.setItem('ss_pfp', db.pfp || "");
-            localStorage.setItem('ss_bnr', db.banner || "");
-            if(db.user) {
-                await rtdb.ref('users/' + db.user).set({ 
-                    username: db.user.toLowerCase(), displayName: db.user,
-                    tables: db.tables, pfp: db.pfp || "", banner: db.banner || "" 
+            localStorage.setItem('ss_user', state.user || "");
+            localStorage.setItem('ss_tables', JSON.stringify(state.tables));
+            localStorage.setItem('ss_pfp', state.pfp || "");
+            localStorage.setItem('ss_bnr', state.banner || "");
+            if(state.user) {
+                await db.ref('users/' + state.user.toLowerCase()).set({
+                    username: state.user.toLowerCase(),
+                    displayName: state.user,
+                    tables: state.tables,
+                    pfp: state.pfp || "",
+                    banner: state.banner || ""
                 });
             }
         },
-        createTable() { const n = prompt("Subject Name:"); if(n) { db.tables.push({name:n, tasks:[]}); this.save(); ui.renderHome(); } },
-        openTable(i) {
-            db.activeTable = i;
-            document.getElementById('det-name').innerText = db.tables[i].name;
-            this.renderTasks(); ui.show('detail');
-        },
-        renderTasks() {
-            const t = db.tables[db.activeTable];
-            document.getElementById('task-list').innerHTML = (t.tasks || []).map((tk, i) => `
-                <div class="glass-panel" style="padding:15px; display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <input style="background:none; border:none; color:#fff; flex:1; font-size:16px;" value="${tk}" onchange="core.editTask(${i}, this.value)">
-                    <button onclick="core.delTask(${i})" style="background:none; border:none; color:#ff3b30; cursor:pointer;">✕</button>
+        newSubject() { const n=prompt("Name:"); if(n){ state.tables.push({name:n, tasks:[]}); this.save(); ui.render(); }},
+        open(i) { state.cur=i; document.getElementById('active-title').innerText=state.tables[i].name; this.drawTasks(); ui.show('detail'); },
+        drawTasks() {
+            document.getElementById('task-list').innerHTML = (state.tables[state.cur].tasks||[]).map((tk, i) => `
+                <div class="glass-panel" style="display:flex; gap:10px; align-items:center;">
+                    <input style="background:none; border:none; color:#fff; flex:1;" value="${tk}" onchange="core.editTask(${i}, this.value)">
+                    <button onclick="core.delTask(${i})" style="background:none; border:none; color:red;">✕</button>
                 </div>
             `).join('');
         },
-        addTask() { if(!db.tables[db.activeTable].tasks) db.tables[db.activeTable].tasks = []; db.tables[db.activeTable].tasks.push("New Goal"); this.save(); this.renderTasks(); },
-        editTask(i, v) { db.tables[db.activeTable].tasks[i] = v; this.save(); },
-        delTask(i) { db.tables[db.activeTable].tasks.splice(i, 1); this.save(); this.renderTasks(); },
-        deleteTable() { db.tables.splice(db.activeTable, 1); this.save(); ui.renderHome(); ui.show('home'); },
+        addTask() { state.tables[state.cur].tasks.push("New Goal"); this.save(); this.drawTasks(); },
+        editTask(i,v) { state.tables[state.cur].tasks[i]=v; this.save(); },
+        delTask(i) { state.tables[state.cur].tasks.splice(i,1); this.save(); this.drawTasks(); },
         
-        async search() {
-            const q = document.getElementById('sq').value.toLowerCase();
+        async doSearch() {
+            const q = document.getElementById('search-q').value.toLowerCase();
             const res = document.getElementById('search-results');
-            res.innerHTML = '<div style="opacity:0.5;">Searching...</div>';
-            let html = '';
+            res.innerHTML = "Searching...";
+            let html = "";
 
-            // Search Local Subjects/Goals
-            db.tables.forEach((t, i) => {
-                if(t.name.toLowerCase().includes(q)) html += `<div class="result-item" onclick="core.openTable(${i})">📚 <b>${t.name}</b></div>`;
-                (t.tasks || []).forEach(tk => { if(tk.toLowerCase().includes(q)) html += `<div class="result-item" onclick="core.openTable(${i})">🎯 <b>${tk}</b> in ${t.name}</div>`; });
+            // Search Local
+            state.tables.forEach((t, i) => {
+                if(t.name.toLowerCase().includes(q)) html += `<div class="result-card" onclick="core.open(${i})">📚 ${t.name} (My Subject)</div>`;
             });
 
-            // Search Users in Firebase (Username rule must be active)
+            // Search Global Users
             try {
-                const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q+"\uf8ff").limitToFirst(5).once('value');
-                if(snap.exists()) {
-                    snap.forEach(c => {
-                        const val = c.val();
-                        if(val.username !== db.user?.toLowerCase()) {
-                            html += `<div class="result-item"><img src="${val.pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed='+val.username}" style="width:35px; height:35px; border-radius:10px;"> <div><b>${val.displayName || val.username}</b></div></div>`;
-                        }
-                    });
-                }
+                const snap = await db.ref('users').once('value');
+                snap.forEach(c => {
+                    const u = c.val();
+                    if(u.username && u.username.includes(q)) {
+                        html += `<div class="result-card">
+                            <img src="${u.pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed='+u.username}" style="width:30px; border-radius:5px;">
+                            <b>${u.displayName || u.username}</b> (Student)
+                        </div>`;
+                    }
+                });
             } catch(e) { console.error(e); }
-            res.innerHTML = html || '<div style="opacity:0.3; padding:20px;">No results.</div>';
+            res.innerHTML = html || "No matches found.";
         },
 
-        triggerUpload(m) { 
-            if(!db.user) { ui.openAuth('signup'); return; }
-            this.uploadMode = m; document.getElementById('file-in').click(); 
-        },
-        handleFile(el) {
-            const file = el.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if(this.uploadMode === 'pfp') { db.pfp = e.target.result; document.getElementById('p-pfp').src = e.target.result; }
-                else { db.banner = e.target.result; document.getElementById('p-banner').src = e.target.result; }
+        up(m) { if(!state.user) return alert("Login to edit profile"); this.upMode=m; document.getElementById('f-in').click(); },
+        file(el) {
+            const f = el.files[0]; const r = new FileReader();
+            r.onload = (e) => {
+                if(this.upMode==='pfp') { state.pfp=e.target.result; document.getElementById('u-pfp').src=e.target.result; }
+                else { state.banner=e.target.result; document.getElementById('u-banner').src=e.target.result; }
                 this.save();
             };
-            reader.readAsDataURL(file);
+            r.readAsDataURL(f);
         },
 
-        async authConfirm() {
-            const u = document.getElementById('au').value.trim();
-            const p = document.getElementById('ap').value.trim();
-            if(this.authMode === 'signup') {
-                db.user = u; await this.save(); location.reload();
-            } else {
-                const s = await rtdb.ref('users/'+u).once('value');
-                if(s.exists()) { 
-                    const d = s.val(); db.user = u; db.tables = d.tables || []; db.pfp = d.pfp; db.banner = d.banner;
+        async authGo() {
+            const u = document.getElementById('m-u').value.trim();
+            const p = document.getElementById('m-p').value.trim();
+            if(!u) return;
+            if(this.mode==='signup') { state.user=u; await this.save(); location.reload(); }
+            else {
+                const s = await db.ref('users/'+u.toLowerCase()).once('value');
+                if(s.exists()){
+                    const d = s.val(); state.user=d.displayName; state.tables=d.tables||[]; state.pfp=d.pfp; state.banner=d.banner;
                     this.save(); location.reload();
-                } else { alert("User not found."); }
+                } else { alert("Not found"); }
             }
         },
         logout() { localStorage.clear(); location.reload(); }
     };
 
     window.onload = () => {
-        if(db.user) {
-            document.getElementById('un-display').innerText = db.user;
-            document.getElementById('profile-tag').innerText = "Cloud Synchronized";
-            document.getElementById('guest-controls').style.display = 'none';
-            document.getElementById('logout-btn').style.display = 'block';
-            document.getElementById('p-banner').classList.add('can-edit');
-            document.getElementById('p-pfp-wrap').classList.add('can-edit');
+        if(state.user) {
+            document.getElementById('u-name').innerText = state.user;
+            document.getElementById('auth-box').style.display='none';
+            document.getElementById('logout-btn').style.display='block';
+            if(state.pfp) document.getElementById('u-pfp').src = state.pfp;
+            if(state.banner) document.getElementById('u-banner').src = state.banner;
         }
-        if(db.pfp) document.getElementById('p-pfp').src = db.pfp;
-        if(db.banner) document.getElementById('p-banner').src = db.banner;
-        ui.renderHome();
+        ui.render();
     };
 </script>
 </body>
