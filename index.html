@@ -3,693 +3,931 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SyllabusStudy v4</title>
+    <title>Syllabus Titan v5</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <style>
-        /* =========================================
-           1. CSS VARIABLES & THEME
-           ========================================= */
+        /* * ==========================================================================
+         * SECTION 1: CORE VARIABLES & ANIMATION ENGINE
+         * ==========================================================================
+         */
         :root {
-            --bg: #000000;
-            --surface: #1C1C1E;
-            --surface-highlight: #2C2C2E;
-            --primary: #0A84FF;
-            --primary-dim: rgba(10, 132, 255, 0.2);
-            --text-main: #FFFFFF;
-            --text-sec: #8E8E93;
-            --border: rgba(255,255,255,0.12);
-            --danger: #FF453A;
-            --radius: 20px;
-            --header-h: 180px; /* Banner Height */
-            --pfp-size: 100px;
+            /* Palette - Cyber Dark */
+            --c-bg: #050505;
+            --c-surface: rgba(28, 28, 30, 0.65);
+            --c-surface-solid: #1c1c1e;
+            --c-primary: #2d7af1;
+            --c-primary-glow: rgba(45, 122, 241, 0.4);
+            --c-accent: #bf5af2;
+            --c-success: #32d74b;
+            --c-danger: #ff453a;
+            --c-text-main: #ffffff;
+            --c-text-sec: rgba(255, 255, 255, 0.55);
+            
+            /* Metrics */
+            --radius-xl: 32px;
+            --radius-l: 20px;
+            --radius-m: 14px;
+            --padding-page: 24px;
+            --header-h: 180px;
+            --avatar-size: 90px;
+            
+            /* Animation Timing */
+            --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            background: var(--bg); color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
-            height: 100%; overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
+        /* RESET */
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--c-bg); font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--c-text-main); }
+
+        /* MOVING GRADIENT BACKGROUND */
+        .live-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a0b2e);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        /* =========================================
-           2. NAVIGATION VIEWS
-           ========================================= */
-        .app-container {
-            position: relative; width: 100%; height: 100%;
+        /* INTRO ANIMATION OVERLAY */
+        #intro-layer {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            transition: opacity 0.8s ease, visibility 0.8s;
         }
-
-        .view {
-            position: absolute; inset: 0;
-            padding: 20px 20px 100px 20px; /* Bottom padding for Dock */
-            overflow-y: auto;
-            opacity: 0; pointer-events: none;
-            transform: scale(0.98);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            display: none; /* Crucial for performance */
+        .intro-logo {
+            width: 80px; height: 80px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+            border-radius: 24px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 50px var(--c-primary-glow);
+            animation: introBounce 1.2s var(--ease-elastic) forwards;
         }
-
-        .view.active {
-            opacity: 1; pointer-events: auto;
-            transform: scale(1);
-            display: block;
+        .intro-text {
+            margin-top: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+            opacity: 0; animation: fadeUp 0.8s 0.5s forwards;
         }
+        @keyframes introBounce { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* =========================================
-           3. UI COMPONENTS
-           ========================================= */
-        h1 { margin: 0 0 5px 0; font-size: 32px; font-weight: 700; }
-        p { color: var(--text-sec); margin: 0; font-size: 15px; }
-
-        .btn {
-            background: var(--surface-highlight); color: white;
-            border: none; padding: 15px; width: 100%;
-            border-radius: 14px; font-size: 16px; font-weight: 600;
-            margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .btn:active { opacity: 0.7; transform: scale(0.98); }
-        .btn.primary { background: var(--primary); color: white; }
-        .btn.danger { background: rgba(255,69,58,0.15); color: var(--danger); }
-
-        .inp {
-            background: var(--surface); border: 1px solid var(--border);
-            color: white; padding: 16px; width: 100%;
-            border-radius: 14px; font-size: 16px; outline: none;
-        }
-        .inp:focus { border-color: var(--primary); background: #222; }
-
-        .card {
-            background: var(--surface); padding: 20px;
-            border-radius: var(--radius); margin-bottom: 15px;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-        .card.link:active { background: var(--surface-highlight); }
-
-        .back-btn {
-            display: inline-flex; align-items: center; gap: 5px;
-            color: var(--primary); font-weight: 600; margin-bottom: 15px;
-            cursor: pointer;
-        }
-
-        /* =========================================
-           4. FIXED PROFILE LAYOUT (THE FIX)
-           ========================================= */
-        /* This container holds the banner and the overlapping avatar */
-        .hero-container {
-            position: relative;
-            width: 100%;
-            margin-bottom: 60px; /* IMPORTANT: Space for the overlapping avatar */
-        }
-
-        .hero-banner {
-            width: 100%;
-            height: var(--header-h);
-            background-color: #333;
-            border-radius: var(--radius);
-            overflow: hidden;
-            position: relative;
-        }
-        .hero-banner img { width: 100%; height: 100%; object-fit: cover; }
-
-        .hero-avatar {
-            width: var(--pfp-size);
-            height: var(--pfp-size);
-            border-radius: 35px; /* Squircle */
-            background-color: var(--surface);
-            border: 5px solid var(--bg); /* The "Cutout" effect */
-            position: absolute;
-            bottom: -50px; /* Half of height to overlap */
-            left: 20px;
-            overflow: hidden;
-            z-index: 10;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        .hero-info {
-            padding-left: 5px;
-        }
-
-        /* =========================================
-           5. BOTTOM DOCK
-           ========================================= */
-        .dock {
-            position: fixed; bottom: 25px; left: 20px; right: 20px;
-            height: 70px;
-            background: rgba(28,28,30,0.85);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 35px; border: 1px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center;
-            z-index: 1000;
-        }
-        .dock-item {
-            opacity: 0.5; transition: 0.2s;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .dock-item.active { opacity: 1; color: var(--primary); transform: translateY(-3px); }
-        .dock-item svg { width: 26px; height: 26px; fill: currentColor; }
-
-        /* =========================================
-           6. UTILS
-           ========================================= */
-        .hidden { display: none !important; }
+        /* * ==========================================================================
+         * SECTION 2: COMPONENT STYLES
+         * ==========================================================================
+         */
         
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            z-index: 2000; display: none; align-items: center; justify-content: center;
+        /* SCROLL VIEW CONTAINER */
+        #app-root { position: relative; width: 100%; height: 100%; }
+        
+        .screen {
+            position: absolute; inset: 0; 
+            padding: var(--padding-page); padding-bottom: 120px;
+            overflow-y: auto; scrollbar-width: none;
+            opacity: 0; pointer-events: none; transform: scale(0.96) translateY(10px);
+            transition: opacity 0.4s var(--ease-expo), transform 0.4s var(--ease-expo);
         }
-        .modal {
-            background: var(--surface); width: 85%; max-width: 400px;
-            padding: 25px; border-radius: var(--radius); border: 1px solid var(--border);
+        .screen::-webkit-scrollbar { display: none; }
+        .screen.active { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+
+        /* TYPOGRAPHY */
+        h1 { font-size: 34px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -1px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 0 0 16px 0; }
+        p { font-size: 16px; color: var(--c-text-sec); line-height: 1.5; margin: 0; }
+        .subtext { font-size: 13px; color: var(--c-text-sec); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+
+        /* CARDS (Glassmorphism) */
+        .card {
+            background: var(--c-surface);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-l);
+            padding: 20px; margin-bottom: 16px;
+            position: relative; overflow: hidden;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .card.interactive:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
+
+        /* BUTTONS */
+        .btn {
+            width: 100%; height: 56px; border: none; border-radius: var(--radius-m);
+            font-size: 17px; font-weight: 600; font-family: inherit; color: #fff;
+            background: rgba(255,255,255,0.1); margin-top: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .btn-primary { background: var(--c-primary); box-shadow: 0 8px 20px -6px var(--c-primary-glow); }
+        .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--c-danger); }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
+
+        /* INPUTS */
+        .inp-wrap { margin-bottom: 16px; }
+        .inp {
+            width: 100%; height: 54px; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-m);
+            padding: 0 16px; color: white; font-size: 16px; font-family: inherit;
+            transition: 0.3s;
+        }
+        .inp:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-glow); background: rgba(0,0,0,0.5); }
+
+        /* * ==========================================================================
+         * SECTION 3: PROFILE HERO (THE FIX)
+         * ==========================================================================
+         */
+        /* Rigid positioning container */
+        .profile-hero {
+            position: relative;
+            width: 100%;
+            height: calc(var(--header-h) + (var(--avatar-size) / 2)); /* Height of banner + half avatar */
+            margin-bottom: 20px;
+        }
+        
+        .profile-banner {
+            width: 100%; height: var(--header-h);
+            background: #222; border-radius: var(--radius-l);
+            overflow: hidden; position: relative;
+        }
+        .profile-banner img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .profile-avatar {
+            width: var(--avatar-size); height: var(--avatar-size);
+            border-radius: 30px; /* Squircle */
+            background: #333;
+            border: 4px solid var(--c-bg); /* Cutout effect */
+            position: absolute;
+            left: 24px;
+            bottom: 0; /* Aligns exactly to bottom of container */
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .profile-meta { padding: 0 10px; }
+
+        /* * ==========================================================================
+         * SECTION 4: NAVIGATION DOCK
+         * ==========================================================================
+         */
+        .dock-container {
+            position: fixed; bottom: 30px; left: 0; width: 100%;
+            display: flex; justify-content: center; z-index: 100;
+            pointer-events: none; /* Let clicks pass through sides */
+        }
+        
+        .dock {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 24px; border-radius: 40px;
+            display: flex; gap: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            pointer-events: auto;
+            transform: translateY(0); transition: 0.4s var(--ease-elastic);
+        }
+        .dock.hidden { transform: translateY(150px); }
+
+        .dock-btn {
+            position: relative; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--c-text-sec); transition: 0.3s;
+        }
+        .dock-btn svg { width: 26px; height: 26px; fill: currentColor; }
+        .dock-btn.active { color: var(--c-primary); transform: translateY(-5px); }
+        .dock-btn.active::after {
+            content:''; position: absolute; bottom: -8px; width: 4px; height: 4px;
+            background: var(--c-primary); border-radius: 50%;
+            box-shadow: 0 0 10px var(--c-primary);
         }
 
-        /* Toast */
-        .toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #333; color: white; padding: 10px 20px; border-radius: 20px;
-            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 3000; font-size: 14px;
+        /* * ==========================================================================
+         * SECTION 5: NOTIFICATIONS & MODALS
+         * ==========================================================================
+         */
+        #toast-zone {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 20px;
+            pointer-events: none; z-index: 2000; display: flex; flex-direction: column; gap: 10px; align-items: center;
         }
-        .toast.show { opacity: 1; top: 30px; }
+        .toast {
+            background: rgba(30,30,30,0.95); backdrop-filter: blur(10px);
+            padding: 12px 24px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+            color: white; font-size: 14px; font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideDown 0.4s var(--ease-elastic);
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 1500; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            width: 85%; max-width: 400px; background: #1c1c1e;
+            border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.1);
+            transform: scale(0.9); transition: 0.3s var(--ease-elastic);
+        }
+        .modal-overlay.open .modal-box { transform: scale(1); }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .back-nav { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; opacity: 0.7; margin-bottom: 20px; cursor: pointer; }
+        .list-anim > * { animation: fadeUpList 0.5s backwards; }
+        .list-anim > *:nth-child(1) { animation-delay: 0.05s; }
+        .list-anim > *:nth-child(2) { animation-delay: 0.1s; }
+        .list-anim > *:nth-child(3) { animation-delay: 0.15s; }
+        .list-anim > *:nth-child(4) { animation-delay: 0.2s; }
+        @keyframes fadeUpList { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-
-        <div id="view-home" class="view active">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h1>My Tables</h1>
-                <div onclick="Router.go('settings')" style="background:var(--surface); padding:10px; border-radius:50%; cursor:pointer;">
-                    <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                </div>
-            </div>
-
-            <div id="home-guest-msg" class="card hidden" style="border: 1px solid var(--primary);">
-                <b>Guest Mode</b>
-                <p>Data is saved to this device only.</p>
-            </div>
-
-            <div id="list-subjects"></div>
-            
-            <button class="btn primary" onclick="Modals.addSubject()">+ Create New Table</button>
+    <div class="live-background"></div>
+    
+    <div id="intro-layer">
+        <div class="intro-logo">
+            <svg style="width:40px; fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
         </div>
-
-        <div id="view-detail" class="view">
-            <div class="back-btn" onclick="Router.go('home')">← Back</div>
-            <h1 id="dt-title">Subject</h1>
-            <p id="dt-desc" style="margin-bottom:20px;">Managing tasks</p>
-            
-            <div id="list-tasks"></div>
-            <button class="btn primary" onclick="Modals.addTask()">+ Add Goal</button>
-        </div>
-
-        <div id="view-search" class="view">
-            <h1>Search</h1>
-            <p>Find other users.</p>
-            
-            <div id="search-auth-lock" class="card hidden" style="margin-top:20px; text-align:center;">
-                <p>Sign in to search for friends.</p>
-                <button class="btn primary" onclick="Router.go('settings')">Go to Settings</button>
-            </div>
-
-            <div id="search-container">
-                <input class="inp" placeholder="Username..." oninput="Core.search(this.value)" style="margin-top:20px;">
-                <div id="list-results" style="margin-top:20px;"></div>
-            </div>
-        </div>
-
-        <div id="view-profile" class="view" style="padding-top:0;">
-            <div class="hero-container">
-                <div class="hero-banner" onclick="Core.upload('bnr')">
-                    <img id="pf-bnr" src="">
-                </div>
-                <div class="hero-avatar" onclick="Core.upload('pfp')">
-                    <img id="pf-pfp" src="">
-                </div>
-            </div>
-            
-            <div class="hero-info">
-                <h1 id="pf-name">Guest</h1>
-                <span id="pf-badge" style="background:var(--surface-highlight); padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold;">LOCAL USER</span>
-                
-                <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="card" style="text-align:center; margin:0;">
-                        <b id="stat-tables" style="font-size:20px;">0</b><br><small>Tables</small>
-                    </div>
-                    <div class="card" style="text-align:center; margin:0;">
-                        <b id="stat-fam" style="font-size:20px;">0</b><br><small>Family</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-public" class="view" style="padding-top:0;">
-            <div onclick="Router.back()" style="position:absolute; top:20px; left:20px; z-index:50; background:rgba(0,0,0,0.5); padding:8px 15px; border-radius:20px; color:white; font-weight:bold; cursor:pointer;">← Back</div>
-
-            <div class="hero-container">
-                <div class="hero-banner">
-                    <img id="pub-bnr" src="">
-                </div>
-                <div class="hero-avatar">
-                    <img id="pub-pfp" src="">
-                </div>
-            </div>
-
-            <div class="hero-info">
-                <h1 id="pub-name">User</h1>
-                <p>Public Profile</p>
-                
-                <h4 style="margin-top:30px; opacity:0.5; text-transform:uppercase; font-size:12px;">Public Tables</h4>
-                <div id="pub-list"></div>
-            </div>
-        </div>
-
-        <div id="view-settings" class="view">
-            <div class="back-btn" onclick="Router.go('home')">← Back</div>
-            <h1>Settings</h1>
-
-            <div class="card link" onclick="Router.go('family')">
-                <b>Family Center</b>
-                <p>Manage invites and connections.</p>
-            </div>
-
-            <div id="auth-section">
-                </div>
-            
-            <div class="card" style="margin-top:20px;">
-                <b>Version 4.0 Stable</b>
-                <p>Enterprise Edition</p>
-            </div>
-        </div>
-
-        <div id="view-family" class="view">
-            <div class="back-btn" onclick="Router.go('settings')">← Back</div>
-            <h1>Family Center</h1>
-
-            <div id="fam-auth-lock" class="card hidden" style="text-align:center;">
-                <p>Sign in to add family.</p>
-            </div>
-
-            <div id="fam-content">
-                <div class="card">
-                    <b>Send Invite</b>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input id="fam-inp" class="inp" placeholder="Username">
-                        <button class="btn primary" style="width:80px; margin:0;" onclick="Core.sendInvite()">Send</button>
-                    </div>
-                </div>
-
-                <div id="fam-invites-box" class="hidden">
-                    <h4 style="color:var(--primary); margin:20px 0 10px 0;">REQUESTS</h4>
-                    <div id="list-invites"></div>
-                </div>
-
-                <h4 style="opacity:0.5; margin:30px 0 10px 0;">MY FAMILY</h4>
-                <div id="list-family"></div>
-            </div>
-        </div>
-
+        <div class="intro-text">SYLLABUS TITAN</div>
     </div>
 
-    <div id="dock" class="dock">
-        <div class="dock-item active" onclick="Router.go('home')">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-        </div>
-        <div class="dock-item" onclick="Router.go('search')">
-            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        </div>
-        <div class="dock-item" onclick="Router.go('profile')">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-        </div>
+    <div id="app-root"></div>
+
+    <div id="toast-zone"></div>
+
+    <div class="dock-container">
+        <div id="main-dock" class="dock">
+            </div>
     </div>
 
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal">
+    <div id="modal-base" class="modal-overlay">
+        <div class="modal-box">
             <h2 id="m-title">Title</h2>
             <div id="m-body"></div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="m-btn-ok" class="btn primary">OK</button>
-                <button class="btn" onclick="Modals.close()">Cancel</button>
+            <div style="display:flex; gap:12px; margin-top:24px;">
+                <button id="m-btn-p" class="btn btn-primary">Confirm</button>
+                <button id="m-btn-s" class="btn">Cancel</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast">Notification</div>
-    <input type="file" id="f-upl" hidden onchange="Core.processUpload(this)">
+    <input type="file" id="file-helper" hidden accept="image/*">
 
 <script>
-    // --- CONFIG ---
-    const CFG = { 
-        apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", 
-        projectId: "syllabuspro-4ec5c", 
-        databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/" 
-    };
-    firebase.initializeApp(CFG);
-    const DB = firebase.database();
-    
-    // --- STATE ---
-    const State = {
-        user: localStorage.getItem('syl_u'),
-        pass: localStorage.getItem('syl_p'),
-        data: null, // Holds subjects, family, etc.
-        curSubIdx: 0,
-        defaults: {
-            bnr: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
-            pfp: 'https://api.dicebear.com/7.x/initials/svg?seed='
+/**
+ * ============================================================================
+ * SYLLABUS TITAN ENGINE (v5.0)
+ * A custom Single Page Application framework contained in one file.
+ * ============================================================================
+ */
+
+/* --- 1. CONFIGURATION & ICONS --- */
+const CONFIG = {
+    firebase: {
+        apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", // Note: Usually hide this in PROD
+        projectId: "syllabuspro-4ec5c",
+        databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    },
+    assets: {
+        defPfp: 'https://api.dicebear.com/7.x/initials/svg?seed=',
+        defBanner: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80'
+    }
+};
+
+const ICONS = {
+    home: `<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
+    search: `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`,
+    profile: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
+    settings: `<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
+    back: `<svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`,
+    add: `<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`,
+    family: `<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`
+};
+
+/* --- 2. DATA SERVICE (HYBRID LOCAL/CLOUD) --- */
+class DataEngine {
+    constructor() {
+        firebase.initializeApp(CONFIG.firebase);
+        this.db = firebase.database();
+        this.localKey = 'syll_titan_v5';
+        this.mode = 'guest'; // 'guest' or 'cloud'
+        this.user = null; // Username
+        this.cache = this._loadLocal();
+    }
+
+    _loadLocal() {
+        const raw = localStorage.getItem(this.localKey);
+        return raw ? JSON.parse(raw) : { subjects: [], family: [], invites: [], pfp: null, bnr: null };
+    }
+
+    _saveLocal() {
+        localStorage.setItem(this.localKey, JSON.stringify(this.cache));
+    }
+
+    async login(u, p) {
+        const snap = await this.db.ref('users/' + u).once('value');
+        if (!snap.exists()) throw new Error("User not found");
+        if (snap.val().pass !== p) throw new Error("Wrong password");
+        
+        this.mode = 'cloud';
+        this.user = u;
+        // Start listener
+        this.db.ref('users/' + u).on('value', s => {
+            this.cache = s.val();
+            App.render(); // Global re-render on cloud update
+        });
+        return true;
+    }
+
+    async signup(u, p) {
+        const ref = this.db.ref('users/' + u);
+        const snap = await ref.once('value');
+        if (snap.exists()) throw new Error("Username taken");
+        
+        // Migrate local data to cloud on signup
+        const payload = { ...this.cache, user: u, pass: p, joined: Date.now() };
+        await ref.set(payload);
+        return this.login(u, p);
+    }
+
+    logout() {
+        if(this.mode === 'cloud') {
+            this.db.ref('users/' + this.user).off();
         }
-    };
+        this.mode = 'guest';
+        this.user = null;
+        this.cache = this._loadLocal(); // Revert to local storage
+        App.router.go('home');
+    }
 
-    // --- UI ROUTER ---
-    const Router = {
-        go: (id) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active');
-            
-            // Dock visibility
-            const dock = document.getElementById('dock');
-            if(['detail','settings','family','public','auth'].includes(id)) dock.style.display = 'none';
-            else dock.style.display = 'flex';
+    // CRUD OPERATIONS
+    save(path, value) {
+        // Deep update helper
+        if(path === 'root') {
+            this.cache = value;
+        } else {
+            // Simple path handling for this demo
+            this.cache[path] = value;
+        }
 
-            // Checks
-            if(id === 'search' && !State.user) {
-                document.getElementById('search-auth-lock').classList.remove('hidden');
-                document.getElementById('search-container').classList.add('hidden');
-            } else if(id === 'search') {
-                document.getElementById('search-auth-lock').classList.add('hidden');
-                document.getElementById('search-container').classList.remove('hidden');
-            }
+        if (this.mode === 'guest') {
+            this._saveLocal();
+            App.render();
+        } else {
+            this.db.ref('users/' + this.user).update(this.cache);
+        }
+    }
 
-            if(id === 'family' && !State.user) {
-                document.getElementById('fam-auth-lock').classList.remove('hidden');
-                document.getElementById('fam-content').classList.add('hidden');
-            } else if (id === 'family') {
-                document.getElementById('fam-auth-lock').classList.add('hidden');
-                document.getElementById('fam-content').classList.remove('hidden');
-            }
-        },
-        back: () => Router.go('search')
-    };
+    async searchUsers(query) {
+        // Cloud only feature
+        if(this.mode === 'guest') return [];
+        const snap = await this.db.ref('users').once('value');
+        const results = [];
+        snap.forEach(c => {
+            const val = c.val();
+            if(val.user && val.user.toLowerCase().includes(query.toLowerCase())) results.push(val);
+        });
+        return results;
+    }
 
-    // --- CORE LOGIC ---
-    const Core = {
-        init: () => {
-            if(State.user) {
-                // Cloud Mode
-                DB.ref('users/'+State.user).on('value', snap => {
-                    const val = snap.val();
-                    if(val && val.pass === State.pass) {
-                        State.data = val;
-                        Core.render();
-                    } else {
-                        Core.logout(); // Invalid creds
-                    }
-                });
-            } else {
-                // Guest Mode
-                const local = localStorage.getItem('syl_local');
-                State.data = local ? JSON.parse(local) : { subjects:[], user:'Guest' };
-                document.getElementById('home-guest-msg').classList.remove('hidden');
-                Core.render();
-            }
-            Core.renderSettings();
-        },
+    async getPublicProfile(username) {
+        const snap = await this.db.ref('users/' + username).once('value');
+        return snap.exists() ? snap.val() : null;
+    }
 
-        save: () => {
-            if(State.user) {
-                // Save to Cloud
-                DB.ref('users/'+State.user).update(State.data);
-            } else {
-                // Save to Local
-                localStorage.setItem('syl_local', JSON.stringify(State.data));
-                Core.render();
-            }
-        },
+    async sendInvite(target) {
+        if(this.mode === 'guest') throw new Error("Sign in to use family features");
+        const ref = this.db.ref('users/' + target + '/invites');
+        const snap = await ref.once('value');
+        const list = snap.val() || [];
+        if(list.includes(this.user)) throw new Error("Already invited");
+        list.push(this.user);
+        await ref.set(list);
+    }
+}
 
-        render: () => {
-            const d = State.data;
-            const def = State.defaults;
+/* --- 3. UI FRAMEWORK (MINI-REACT) --- */
+class Router {
+    constructor() {
+        this.routes = {};
+        this.history = [];
+        this.current = null;
+    }
+    
+    register(name, renderer) { this.routes[name] = renderer; }
+    
+    go(name, params = null) {
+        this.history.push(name);
+        this.current = name;
+        
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        
+        // Check if screen element exists, if not render it
+        let el = document.getElementById('view-' + name);
+        if(!el) {
+            el = document.createElement('div');
+            el.id = 'view-' + name;
+            el.className = 'screen';
+            document.getElementById('app-root').appendChild(el);
+        }
+        
+        // Execute render function
+        const html = this.routes[name](params);
+        el.innerHTML = html;
+        
+        // Force reflow for animation
+        void el.offsetWidth; 
+        el.classList.add('active');
+        
+        // Handle Dock Visibility
+        const dock = document.getElementById('main-dock');
+        if(['home', 'search', 'profile'].includes(name)) dock.classList.remove('hidden');
+        else dock.classList.add('hidden');
 
-            // Profile UI
-            document.getElementById('pf-name').innerText = d.user || 'Guest';
-            document.getElementById('pf-bnr').src = d.bnr || def.bnr;
-            document.getElementById('pf-pfp').src = d.pfp || (def.pfp + (d.user||'G'));
-            
-            document.getElementById('stat-tables').innerText = (d.subjects||[]).length;
-            document.getElementById('stat-fam').innerText = (d.family||[]).length;
+        // Update Dock Active State
+        document.querySelectorAll('.dock-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.target === name);
+        });
+    }
+    
+    back() {
+        if(this.history.length > 1) {
+            this.history.pop();
+            this.go(this.history[this.history.length - 1]);
+        } else {
+            this.go('home');
+        }
+    }
+}
 
-            if(State.user) {
-                document.getElementById('pf-badge').innerText = "CLOUD USER";
-                document.getElementById('pf-badge').style.background = "var(--primary)";
-                document.getElementById('pf-badge').style.color = "white";
-            }
-
-            // Tables List
-            const list = document.getElementById('list-subjects');
-            if(!d.subjects || !d.subjects.length) {
-                list.innerHTML = `<div style="text-align:center; opacity:0.5; padding:40px;">No tables yet.</div>`;
-            } else {
-                list.innerHTML = d.subjects.map((s, i) => `
-                    <div class="card link" onclick="Core.openSub(${i})">
-                        <b>${s.name}</b>
-                        <div style="font-size:13px; opacity:0.7; margin-top:5px;">${(s.tasks||[]).length} Goals</div>
-                    </div>
-                `).join('');
-            }
-
-            // Family Lists
-            if(State.user) {
-                const inv = d.invites || [];
-                const fam = d.family || [];
-                
-                const invBox = document.getElementById('fam-invites-box');
-                if(inv.length) {
-                    invBox.classList.remove('hidden');
-                    document.getElementById('list-invites').innerHTML = inv.map(n => `
-                        <div class="card">
-                            <b>${n}</b>
-                            <div style="display:flex; gap:10px; margin-top:10px;">
-                                <button class="btn primary" style="margin:0; padding:8px;" onclick="Core.reply('${n}',true)">Accept</button>
-                                <button class="btn danger" style="margin:0; padding:8px;" onclick="Core.reply('${n}',false)">Deny</button>
-                            </div>
+/* --- 4. VIEWS (RENDERERS) --- */
+const Views = {
+    Home: () => {
+        const data = Engine.cache;
+        const subjects = data.subjects || [];
+        
+        let listHTML = '';
+        if(subjects.length === 0) {
+            listHTML = `
+                <div class="card" style="text-align:center; padding:40px; border-style:dashed; opacity:0.6">
+                    <h3>No Tables Yet</h3>
+                    <p>Create your first study table below.</p>
+                </div>
+            `;
+        } else {
+            listHTML = subjects.map((sub, idx) => `
+                <div class="card interactive" onclick="App.router.go('detail', ${idx})">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span class="subtext">TABLE</span>
+                            <h2>${sub.name}</h2>
+                            <p>${(sub.tasks || []).length} Goals Pending</p>
                         </div>
-                    `).join('');
-                } else {
-                    invBox.classList.add('hidden');
-                }
-
-                document.getElementById('list-family').innerHTML = fam.length ? fam.map(f => `
-                    <div class="card link" onclick="Core.viewPublic('${f}')">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div style="width:10px; height:10px; background:var(--primary); border-radius:50%;"></div>
-                            <b>${f}</b>
+                        <div style="width:40px; height:40px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            ➜
                         </div>
                     </div>
-                `).join('') : '<div style="opacity:0.5;">No family yet.</div>';
-            }
-        },
-
-        openSub: (i) => {
-            State.curSubIdx = i;
-            const sub = State.data.subjects[i];
-            document.getElementById('dt-title').innerText = sub.name;
-            document.getElementById('dt-desc').innerText = (sub.tasks||[]).length + " Goals";
-            document.getElementById('list-tasks').innerHTML = (sub.tasks||[]).map(t => `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${t.desc}</b>
-                        <small style="color:var(--primary)">${t.date}</small>
+                    <div style="margin-top:15px; height:4px; background:rgba(0,0,0,0.3); border-radius:2px; overflow:hidden;">
+                        <div style="width:${Math.random() * 100}%; height:100%; background:var(--c-primary);"></div>
                     </div>
                 </div>
             `).join('');
-            Router.go('detail');
-        },
+        }
 
-        // --- AUTH ---
-        login: async () => {
-            const u = document.getElementById('au-u').value.trim();
-            const p = document.getElementById('au-p').value.trim();
-            if(!u || !p) return;
+        return `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1>My Tables</h1>
+                <div onclick="App.router.go('settings')" style="cursor:pointer; padding:10px; background:var(--c-surface); border-radius:50%; border:1px solid rgba(255,255,255,0.1)">
+                   ${ICONS.settings.replace('width="24"', 'width="20"')}
+                </div>
+            </div>
             
-            const snap = await DB.ref('users/'+u).once('value');
-            if(snap.exists() && snap.val().pass === p) {
-                localStorage.setItem('syl_u', u);
-                localStorage.setItem('syl_p', p);
-                location.reload();
-            } else {
-                Toast.show("Invalid Credentials");
-            }
-        },
-        signup: async () => {
-            const u = document.getElementById('au-u').value.trim();
-            const p = document.getElementById('au-p').value.trim();
-            if(!u || !p) return;
-
-            const snap = await DB.ref('users/'+u).once('value');
-            if(snap.exists()) return Toast.show("Username taken");
-
-            // Merge local data if creating account
-            const startData = State.data;
-            startData.user = u;
-            startData.pass = p;
-            
-            await DB.ref('users/'+u).set(startData);
-            localStorage.setItem('syl_u', u);
-            localStorage.setItem('syl_p', p);
-            location.reload();
-        },
-        logout: () => {
-            localStorage.removeItem('syl_u');
-            localStorage.removeItem('syl_p');
-            location.reload();
-        },
-
-        renderSettings: () => {
-            const el = document.getElementById('auth-section');
-            if(State.user) {
-                el.innerHTML = `
-                    <div class="card">
-                        <b>Logged in as ${State.user}</b>
-                        <button class="btn danger" onclick="Core.logout()">Log Out</button>
+            ${Engine.mode === 'guest' ? 
+                `<div class="card" style="background:rgba(255, 193, 7, 0.15); border-color:rgba(255, 193, 7, 0.3);">
+                    <div style="display:flex; gap:10px; align-items:center; color:#ffd54f">
+                        <svg style="width:20px; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <b>Guest Mode Active</b>
                     </div>
-                `;
-            } else {
-                el.innerHTML = `
-                    <div class="card">
-                        <b>Account</b>
-                        <p style="margin-bottom:10px;">Sign in to sync & use family features.</p>
-                        <input id="au-u" class="inp" placeholder="Username" style="margin-bottom:10px;">
-                        <input id="au-p" class="inp" type="password" placeholder="Password">
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn primary" onclick="Core.login()">Login</button>
-                            <button class="btn" onclick="Core.signup()">Sign Up</button>
+                    <p style="margin-top:5px; font-size:14px; opacity:0.8">Data is saved to this device only.</p>
+                </div>` : ''
+            }
+
+            <div class="list-anim">${listHTML}</div>
+            <button class="btn btn-primary" onclick="Modals.open('addSubject')">
+                <svg style="width:20px; fill:white" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Create New Table
+            </button>
+        `;
+    },
+
+    Detail: (idx) => {
+        const sub = Engine.cache.subjects[idx];
+        const tasks = sub.tasks || [];
+        
+        return `
+            <div class="back-nav" onclick="App.router.back()">${ICONS.back} Back</div>
+            <span class="subtext">MANAGING</span>
+            <h1>${sub.name}</h1>
+            
+            <div class="list-anim" style="margin-top:20px;">
+                ${tasks.length === 0 ? '<p style="text-align:center; margin:40px 0; opacity:0.5">No goals defined yet.</p>' : 
+                  tasks.map(t => `
+                    <div class="card" style="padding:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div style="display:flex; gap:12px;">
+                                <div style="width:20px; height:20px; border:2px solid var(--c-primary); border-radius:6px; margin-top:2px;"></div>
+                                <div>
+                                    <div style="font-weight:600; font-size:16px;">${t.desc}</div>
+                                    <div style="font-size:13px; color:var(--c-primary); margin-top:4px;">Due: ${t.date}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                `;
-            }
-        },
-
-        // --- PUBLIC & SEARCH ---
-        search: async (q) => {
-            if(!q) return;
-            const res = document.getElementById('list-results');
-            res.innerHTML = "Searching...";
-            const snap = await DB.ref('users').once('value');
-            let html = "";
-            snap.forEach(c => {
-                const u = c.val();
-                if(u.user && u.user.toLowerCase().includes(q.toLowerCase())) {
-                    html += `<div class="card link" onclick="Core.viewPublic('${u.user}')"><b>${u.user}</b></div>`;
+                  `).join('')
                 }
-            });
-            res.innerHTML = html || "No results.";
-        },
-        viewPublic: async (who) => {
-            const snap = await DB.ref('users/'+who).once('value');
-            if(!snap.exists()) return;
-            const d = snap.val();
+            </div>
             
-            document.getElementById('pub-name').innerText = d.user;
-            document.getElementById('pub-bnr').src = d.bnr || State.defaults.bnr;
-            document.getElementById('pub-pfp').src = d.pfp || State.defaults.pfp + d.user;
-            
-            const list = document.getElementById('pub-list');
-            if(d.subjects) {
-                list.innerHTML = d.subjects.map(s => `<div class="card"><b>${s.name}</b><br><small>${(s.tasks||[]).length} Goals</small></div>`).join('');
-            } else {
-                list.innerHTML = "No tables.";
-            }
-            Router.go('public');
-        },
+            <button class="btn btn-primary" onclick="Modals.open('addTask', ${idx})">Add Goal</button>
+            <div style="height:100px;"></div>
+        `;
+    },
 
-        // --- FAMILY ---
-        sendInvite: async () => {
-            const target = document.getElementById('fam-inp').value;
-            if(!target || target === State.user) return Toast.show("Invalid User");
+    Profile: () => {
+        const d = Engine.cache;
+        const banner = d.bnr || CONFIG.assets.defBanner;
+        const avatar = d.pfp || (CONFIG.assets.defPfp + (d.user || 'Guest'));
+        
+        return `
+            <div class="profile-hero">
+                <div class="profile-banner" onclick="App.triggerUpload('bnr')">
+                    <img src="${banner}">
+                </div>
+                <div class="profile-avatar" onclick="App.triggerUpload('pfp')">
+                    <img src="${avatar}">
+                </div>
+            </div>
             
-            const ref = DB.ref('users/'+target+'/invites');
-            const s = await ref.once('value');
-            let arr = s.val() || [];
-            if(arr.includes(State.user)) return Toast.show("Already sent");
-            
-            arr.push(State.user);
-            await ref.set(arr);
-            Toast.show("Invite Sent");
-        },
-        reply: async (who, yes) => {
-            let inv = State.data.invites.filter(x => x !== who);
-            State.data.invites = inv;
-            
-            if(yes) {
-                State.data.family = State.data.family || [];
-                State.data.family.push(who);
+            <div class="profile-meta">
+                <h1>${d.user || 'Guest User'}</h1>
+                <span class="subtext" style="color:var(--c-primary)">${Engine.mode === 'cloud' ? 'CLOUD SYNC ACTIVE' : 'LOCAL DEVICE STORAGE'}</span>
                 
-                // Add me to them
-                const r2 = DB.ref('users/'+who+'/family');
-                const s2 = await r2.once('value');
-                let f2 = s2.val() || [];
-                f2.push(State.user);
-                await r2.set(f2);
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;">
+                    <div class="card" style="text-align:center; padding:15px;">
+                        <h1>${(d.subjects||[]).length}</h1>
+                        <span class="subtext">TABLES</span>
+                    </div>
+                    <div class="card" style="text-align:center; padding:15px;">
+                        <h1>${(d.family||[]).length}</h1>
+                        <span class="subtext">FAMILY</span>
+                    </div>
+                </div>
+                
+                ${Engine.mode === 'guest' ? `
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Sync Your Data</h3>
+                        <p>Create an account to save your data to the cloud and add family members.</p>
+                        <button class="btn btn-primary" onclick="App.router.go('settings')">Sign In / Sign Up</button>
+                    </div>
+                ` : `
+                    <button class="btn btn-danger" onclick="Engine.logout()">Log Out</button>
+                `}
+            </div>
+        `;
+    },
+
+    Search: () => {
+        return `
+            <h1>Search</h1>
+            <p>Find other users and view their public tables.</p>
+            <div class="inp-wrap" style="margin-top:20px;">
+                <input class="inp" placeholder="Type username..." oninput="App.handleSearch(this.value)">
+            </div>
+            
+            <div id="search-results" class="list-anim">
+                ${Engine.mode === 'guest' ? 
+                    `<div style="text-align:center; padding:30px; opacity:0.5;">Sign in to search users.</div>` : 
+                    `<div style="text-align:center; padding:30px; opacity:0.5;">Start typing...</div>`
+                }
+            </div>
+        `;
+    },
+
+    PublicProfile: (data) => {
+        const banner = data.bnr || CONFIG.assets.defBanner;
+        const avatar = data.pfp || (CONFIG.assets.defPfp + data.user);
+        
+        return `
+            <div onclick="App.router.back()" style="position:fixed; top:20px; left:20px; z-index:50; background:rgba(0,0,0,0.6); padding:8px 16px; border-radius:20px; backdrop-filter:blur(10px); cursor:pointer; font-weight:600;">← Back</div>
+            
+            <div class="profile-hero">
+                <div class="profile-banner"><img src="${banner}"></div>
+                <div class="profile-avatar"><img src="${avatar}"></div>
+            </div>
+            
+            <div class="profile-meta">
+                <h1>${data.user}</h1>
+                <span class="subtext">PUBLIC PROFILE</span>
+                
+                <h3 style="margin-top:30px;">Tables</h3>
+                <div class="list-anim">
+                    ${(data.subjects || []).map(s => `
+                        <div class="card">
+                            <h3>${s.name}</h3>
+                            <p>${(s.tasks||[]).length} Goals</p>
+                        </div>
+                    `).join('') || '<p>No public tables.</p>'}
+                </div>
+            </div>
+        `;
+    },
+    
+    Settings: () => {
+        return `
+            <div class="back-nav" onclick="App.router.back()">${ICONS.back} Back</div>
+            <h1>Settings</h1>
+            
+            <div class="card interactive" onclick="App.router.go('family')">
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <div style="color:var(--c-accent)">${ICONS.family}</div>
+                    <div>
+                        <h3>Family Center</h3>
+                        <p>Manage invites and connections</p>
+                    </div>
+                </div>
+            </div>
+
+            ${Engine.mode === 'guest' ? `
+                <div class="card">
+                    <h3>Account Access</h3>
+                    <div class="inp-wrap"><input id="auth-u" class="inp" placeholder="Username"></div>
+                    <div class="inp-wrap"><input id="auth-p" class="inp" type="password" placeholder="Password"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-primary" onclick="App.handleAuth('login')">Login</button>
+                        <button class="btn" onclick="App.handleAuth('signup')">Sign Up</button>
+                    </div>
+                </div>
+            ` : `
+                <div class="card">
+                    <h3>App Info</h3>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; opacity:0.7;">
+                        <span>Version</span><span>5.0 Titan</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; opacity:0.7;">
+                        <span>User</span><span>${Engine.user}</span>
+                    </div>
+                </div>
+            `}
+        `;
+    },
+
+    Family: () => {
+        const d = Engine.cache;
+        const invites = d.invites || [];
+        const family = d.family || [];
+        
+        return `
+            <div class="back-nav" onclick="App.router.go('settings')">${ICONS.back} Back</div>
+            <h1>Family Center</h1>
+            
+            ${Engine.mode === 'guest' ? `<div class="card">Sign in to add family.</div>` : `
+                <div class="card">
+                    <h3>Send Invite</h3>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <input id="fam-inp" class="inp" placeholder="Username">
+                        <button class="btn btn-primary" style="width:auto; margin:0;" onclick="App.handleInvite()">Send</button>
+                    </div>
+                </div>
+
+                ${invites.length > 0 ? `
+                    <h3 style="color:var(--c-accent); margin-top:20px;">Pending Requests</h3>
+                    ${invites.map(inv => `
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${inv}</b>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn btn-primary" style="height:36px; margin:0;" onclick="App.replyInvite('${inv}', true)">✓</button>
+                                    <button class="btn btn-danger" style="height:36px; margin:0;" onclick="App.replyInvite('${inv}', false)">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                ` : ''}
+
+                <h3 style="margin-top:20px;">My Connections</h3>
+                <div class="list-anim">
+                    ${family.length === 0 ? '<p style="opacity:0.5">No family members connected.</p>' : family.map(f => `
+                        <div class="card interactive" onclick="App.viewPublicUser('${f}')">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:10px; height:10px; background:var(--c-success); border-radius:50%;"></div>
+                                <b>${f}</b>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        `;
+    }
+};
+
+/* --- 5. MAIN CONTROLLER --- */
+const Engine = new DataEngine();
+
+const App = {
+    router: new Router(),
+    uploadType: null,
+    
+    init: () => {
+        // Register Routes
+        App.router.register('home', Views.Home);
+        App.router.register('detail', Views.Detail);
+        App.router.register('profile', Views.Profile);
+        App.router.register('search', Views.Search);
+        App.router.register('public', Views.PublicProfile);
+        App.router.register('settings', Views.Settings);
+        App.router.register('family', Views.Family);
+
+        // Build Dock
+        const dock = document.getElementById('main-dock');
+        dock.innerHTML = `
+            <div class="dock-btn" data-target="home" onclick="App.router.go('home')">${ICONS.home}</div>
+            <div class="dock-btn" data-target="search" onclick="App.router.go('search')">${ICONS.search}</div>
+            <div class="dock-btn" data-target="profile" onclick="App.router.go('profile')">${ICONS.profile}</div>
+        `;
+
+        // Intro Sequence
+        setTimeout(() => {
+            const intro = document.getElementById('intro-layer');
+            intro.style.opacity = '0';
+            setTimeout(() => { intro.style.display = 'none'; }, 800);
+        }, 2200);
+
+        // Initial Render
+        App.render();
+        App.router.go('home');
+        
+        // Setup File input listener
+        document.getElementById('file-helper').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    Engine.save(App.uploadType, evt.target.result);
+                    App.toast("Image Updated");
+                };
+                reader.readAsDataURL(e.target.files[0]);
             }
-            Core.save();
-        },
+        });
+    },
 
-        // --- UPLOADS ---
-        upload: (t) => { if(State.user) { State.upType=t; document.getElementById('f-upl').click(); } else { Toast.show("Login needed"); } },
-        processUpload: (e) => {
-            const r = new FileReader();
-            r.onload = (ev) => {
-                State.data[State.upType] = ev.target.result;
-                Core.save();
-            };
-            r.readAsDataURL(e.files[0]);
+    render: () => {
+        // Re-renders current view if active
+        if(App.router.current) App.router.go(App.router.current);
+    },
+
+    toast: (msg) => {
+        const z = document.getElementById('toast-zone');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerText = msg;
+        z.appendChild(el);
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-20px)';
+            setTimeout(() => el.remove(), 300);
+        }, 3000);
+    },
+
+    // --- ACTIONS ---
+    handleAuth: async (type) => {
+        const u = document.getElementById('auth-u').value;
+        const p = document.getElementById('auth-p').value;
+        if(!u || !p) return App.toast("Missing credentials");
+        
+        try {
+            if(type === 'login') await Engine.login(u, p);
+            else await Engine.signup(u, p);
+            App.toast(`Welcome ${u}`);
+            App.router.go('home');
+        } catch(e) {
+            App.toast(e.message);
         }
-    };
+    },
+    
+    handleSearch: async (val) => {
+        if(!val) return;
+        const container = document.getElementById('search-results');
+        try {
+            const res = await Engine.searchUsers(val);
+            if(res.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding:20px;">No results found.</p>`;
+            } else {
+                container.innerHTML = res.map(u => `
+                    <div class="card interactive" onclick="App.viewPublicUser('${u.user}')">
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <img src="${u.pfp || CONFIG.assets.defPfp + u.user}" style="width:40px; height:40px; border-radius:12px; object-fit:cover;">
+                            <div>
+                                <b>${u.user}</b>
+                                <div class="subtext">${(u.subjects||[]).length} Tables</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch(e) { console.error(e); }
+    },
+    
+    viewPublicUser: async (username) => {
+        const data = await Engine.getPublicProfile(username);
+        if(data) App.router.go('public', data);
+    },
 
-    // --- MODALS ---
-    const Modals = {
-        addSubject: () => {
-            const m = document.getElementById('modal-overlay');
-            document.getElementById('m-title').innerText = "New Table";
-            document.getElementById('m-body').innerHTML = `<input id="m-inp" class="inp" placeholder="Name">`;
-            m.style.display = 'flex';
-            document.getElementById('m-btn-ok').onclick = () => {
-                const n = document.getElementById('m-inp').value;
-                if(n) {
-                    State.data.subjects = State.data.subjects || [];
-                    State.data.subjects.push({name:n, tasks:[]});
-                    Core.save();
+    triggerUpload: (type) => {
+        if(Engine.mode === 'guest') return App.toast("Sign in to customize profile");
+        App.uploadType = type;
+        document.getElementById('file-helper').click();
+    },
+
+    handleInvite: async () => {
+        const target = document.getElementById('fam-inp').value;
+        try {
+            await Engine.sendInvite(target);
+            App.toast("Invite Sent");
+            document.getElementById('fam-inp').value = '';
+        } catch(e) { App.toast(e.message); }
+    },
+    
+    replyInvite: async (sender, accept) => {
+        // Logic to accept/deny (Simplified for single-file demo)
+        const d = Engine.cache;
+        d.invites = d.invites.filter(i => i !== sender);
+        if(accept) {
+            d.family = d.family || [];
+            d.family.push(sender);
+            // Ideally update sender's list too via Cloud Function, doing client-side hack for demo:
+            firebase.database().ref('users/'+sender+'/family').once('value', s => {
+                let f = s.val() || [];
+                if(!f.includes(Engine.user)) { f.push(Engine.user); s.ref.set(f); }
+            });
+        }
+        Engine.save('root', d);
+        App.render();
+    }
+};
+
+/* --- 6. MODAL SYSTEM --- */
+const Modals = {
+    open: (type, payload) => {
+        const m = document.getElementById('modal-base');
+        const t = document.getElementById('m-title');
+        const b = document.getElementById('m-body');
+        const btn = document.getElementById('m-btn-p');
+        
+        m.classList.add('open');
+        
+        if(type === 'addSubject') {
+            t.innerText = "New Table";
+            b.innerHTML = `<div class="inp-wrap"><label class="subtext">NAME</label><input id="m-inp-1" class="inp" placeholder="e.g. Physics"></div>`;
+            btn.onclick = () => {
+                const val = document.getElementById('m-inp-1').value;
+                if(val) {
+                    const subs = Engine.cache.subjects || [];
+                    subs.push({ name: val, tasks: [] });
+                    Engine.save('subjects', subs);
                     Modals.close();
                 }
             };
-        },
-        addTask: () => {
-            const m = document.getElementById('modal-overlay');
-            document.getElementById('m-title').innerText = "New Goal";
-            document.getElementById('m-body').innerHTML = `<input id="m-inp" class="inp" placeholder="Task"><input id="m-date" type="date" class="inp" style="margin-top:10px;">`;
-            m.style.display = 'flex';
-            document.getElementById('m-btn-ok').onclick = () => {
-                const t = document.getElementById('m-inp').value;
-                const d = document.getElementById('m-date').value;
-                if(t) {
-                    State.data.subjects[State.curSubIdx].tasks.push({desc:t, date:d});
-                    Core.save();
-                    Core.openSub(State.curSubIdx);
+        } else if (type === 'addTask') {
+            t.innerText = "New Goal";
+            b.innerHTML = `
+                <div class="inp-wrap"><label class="subtext">DESCRIPTION</label><input id="m-inp-1" class="inp" placeholder="Read Chapter 1"></div>
+                <div class="inp-wrap"><label class="subtext">DUE DATE</label><input id="m-inp-2" class="inp" type="date"></div>
+            `;
+            btn.onclick = () => {
+                const desc = document.getElementById('m-inp-1').value;
+                const date = document.getElementById('m-inp-2').value;
+                if(desc && date) {
+                    const subs = Engine.cache.subjects;
+                    subs[payload].tasks.push({ desc, date });
+                    Engine.save('subjects', subs);
                     Modals.close();
+                    App.router.go('detail', payload);
                 }
             };
-        },
-        close: () => document.getElementById('modal-overlay').style.display = 'none'
-    };
+        }
+        
+        document.getElementById('m-btn-s').onclick = Modals.close;
+    },
+    close: () => document.getElementById('modal-base').classList.remove('open')
+};
 
-    const Toast = { show: (msg) => { const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } };
-
-    // --- START ---
-    window.onload = Core.init;
+// Start the Engine
+window.onload = App.init;
 
 </script>
 </body>
