@@ -3,266 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Syllabus Pro | Asia Cloud Live</title>
+    <title>SyllabusStudy</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
         :root { 
-            --bg: #000; --ui: #111; --text: #fff; --dim: #888; 
-            --border: #222; --accent: #fff; --gold: #d4af37; --red: #ff4545;
+            --apple-glass: rgba(255, 255, 255, 0.1);
+            --apple-border: rgba(255, 255, 255, 0.2);
+            --vibrancy: blur(40px) saturate(200%) brightness(1.1);
         }
 
-        /* Pro Theme Space Background */
-        body.theme-space { 
-            background: url('https://media2.giphy.com/media/v1.Y2lkPTZjMDliOTUycDJodTBqaDdiN3IyMHB6N3JmNm1rZmxycmd2ZWNmNXNicm9mZHYzYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/sJvz8Qnfly3BOuotGx/giphy.gif') center/cover no-repeat fixed !important; 
+        body, html { 
+            margin: 0; padding: 0; background: #000; color: #fff; 
+            font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden;
         }
 
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden; }
+        /* Apple Dynamic Wallpaper */
+        .wallpaper {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at top right, #1a1c2c, #000);
+        }
+        .orb {
+            position: absolute; width: 400px; height: 400px; border-radius: 50%;
+            filter: blur(80px); opacity: 0.2; animation: float 20s infinite alternate;
+        }
+        .orb-1 { background: #007aff; top: -10%; left: -10%; }
+        .orb-2 { background: #5856d6; bottom: -10%; right: -10%; animation-delay: -5s; }
+        @keyframes float { from { transform: translate(0,0); } to { transform: translate(100px, 50px); } }
 
-        /* --- CUSTOM GUI NOTIFICATIONS --- */
-        #gui-notify { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: var(--ui); border: 1px solid var(--border); padding: 15px; border-radius: 20px; z-index: 10001; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        #gui-notify.active { top: 20px; }
+        /* Screens & Panels */
+        .screen { 
+            position: absolute; inset: 0; padding: 60px 25px 120px;
+            opacity: 0; transform: scale(0.95); pointer-events: none;
+            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); overflow-y: auto;
+        }
+        .screen-active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-        /* --- OVERLAYS & MODALS --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 25px; }
-        .modal-gui { background: var(--ui); border: 1px solid var(--border); width: 100%; max-width: 320px; border-radius: 35px; padding: 35px; text-align: center; }
-        .gui-input { width: 100%; background: #000; border: 1px solid var(--border); padding: 18px; border-radius: 16px; color: #fff; margin-bottom: 12px; outline: none; font-size: 16px; box-sizing: border-box; }
+        .glass-panel {
+            background: var(--apple-glass);
+            backdrop-filter: var(--vibrancy); -webkit-backdrop-filter: var(--vibrancy);
+            border: 0.5px solid var(--apple-border);
+            border-radius: 30px; padding: 25px; margin-bottom: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
 
-        /* --- PROFILE UI --- */
-        .profile-header { position: relative; width: 100%; height: 180px; background: #111; border-bottom: 1px solid var(--border); }
-        .banner-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
-        .pfp-container { position: absolute; bottom: -40px; left: 25px; width: 85px; height: 85px; border-radius: 50%; border: 4px solid var(--bg); background: #222; overflow: hidden; cursor: pointer; }
-        .pfp-img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* --- CARDS & BUTTONS --- */
-        .custom-card { background: var(--ui); border: 1px solid var(--border); padding: 22px; border-radius: 28px; margin-bottom: 15px; position: relative; }
-        .btn-gui { width: 100%; padding: 18px; border-radius: 18px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+        /* Search Overlay */
+        #search-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(50px) saturate(200%); z-index: 5000;
+            display: none; flex-direction: column; padding: 60px 25px;
+        }
+        .search-bar {
+            background: rgba(255,255,255,0.1); border: 0.5px solid var(--apple-border);
+            border-radius: 18px; padding: 15px 20px; display: flex; align-items: center;
+        }
+        .search-bar input { background: transparent; border: none; color: #fff; font-size: 18px; width: 100%; outline: none; }
         
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 95px; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.95); z-index: 1000; }
-        .nav-item { color: var(--dim); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .nav-item.active { color: var(--accent); }
+        .result-item {
+            padding: 15px; border-radius: 18px; background: rgba(255,255,255,0.05);
+            margin-top: 10px; display: flex; align-items: center; gap: 12px;
+            border: 0.5px solid transparent; transition: 0.2s;
+        }
+        .result-item:active { background: rgba(255,255,255,0.15); border-color: var(--apple-border); }
+        .res-avatar { width: 35px; height: 35px; border-radius: 10px; }
 
-        .screen { position: absolute; inset: 0; display: none; padding: 0 0 120px; overflow-y: auto; box-sizing: border-box; }
-        .screen-active { display: block; }
+        /* Buttons & Inputs */
+        .btn { width: 100%; padding: 20px; border-radius: 20px; border: none; font-weight: 700; font-size: 16px; transition: 0.2s; }
+        .btn-white { background: #fff; color: #000; }
+        .btn-white:active { transform: scale(0.96); }
+        .btn-glass { background: rgba(255,255,255,0.1); color: #fff; border: 0.5px solid var(--apple-border); }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; }
-        .status-online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .input-apple {
+            width: 100%; background: rgba(0,0,0,0.3); border: 0.5px solid var(--apple-border);
+            padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px; outline: none; box-sizing: border-box;
+        }
+
+        /* Dock */
+        .dock {
+            position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(30px);
+            border: 0.5px solid var(--apple-border); border-radius: 30px;
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+        }
+        .nav-item { color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .nav-item.active { color: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="gui-notify">
-        <div style="width:12px; height:12px; border-radius:50%; background:var(--gold);"></div>
-        <span id="notify-msg" style="font-size:13px; font-weight:700;">Connecting...</span>
+    <div class="wallpaper">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
     </div>
 
-    <div id="modal-auth" class="overlay"><div class="modal-gui">
-        <h2 id="atitle" style="margin-top:0">Cloud Account</h2>
-        <input type="text" id="au" class="gui-input" placeholder="Username">
-        <input type="password" id="ap" class="gui-input" placeholder="Password">
-        <button class="btn-gui btn-primary" onclick="auth.confirm()">Sign In</button>
-        <button class="btn-gui btn-outline" style="margin-top:10px" onclick="ui.close()">Cancel</button>
-    </div></div>
+    <div id="view-home" class="screen screen-active">
+        <h1 style="font-size: 42px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
+        <div id="table-display"></div>
+        <button class="btn btn-white" onclick="ui.openCreate()">+ New Subject</button>
+    </div>
 
-    <div id="modal-create" class="overlay"><div class="modal-gui">
-        <h2 style="margin-top:0">New Subject</h2>
-        <input type="text" id="subject-input" class="gui-input" placeholder="Subject Name...">
-        <button class="btn-gui btn-primary" onclick="core.saveTable()">Create</button>
-        <button class="btn-gui btn-outline" style="margin-top:10px" onclick="ui.close()">Cancel</button>
-    </div></div>
-
-    <input type="file" id="input-banner" accept="image/*" style="display:none" onchange="profile.upload('banner', this)">
-    <input type="file" id="input-pfp" accept="image/*" style="display:none" onchange="profile.upload('pfp', this)">
-
-    <div id="view-home" class="screen screen-active" style="padding: 50px 25px;">
-        <h1 style="font-size:38px; letter-spacing:-2px; margin-bottom:5px;">Workspace</h1>
-        <div id="cloud-status" style="font-size:10px; color:var(--dim); margin-bottom:25px; font-weight:bold;">
-            <span class="status-dot" id="s-dot"></span> <span id="s-text">OFFLINE MODE</span>
+    <div id="search-screen">
+        <div class="search-bar">
+            <input type="text" id="q" placeholder="Search users or subjects..." oninput="search.run(this.value)">
+            <span onclick="ui.closeSearch()">✕</span>
         </div>
-        <div id="table-display" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
-        <button class="btn-gui btn-primary" onclick="ui.openCreate()" style="margin-top:30px;">+ New Subject</button>
-    </div>
-
-    <div id="view-detail" class="screen" style="padding: 50px 25px;">
-        <button class="btn-gui btn-outline" onclick="ui.show('home')" style="width:auto; padding:10px 20px;">← Back</button>
-        <h1 id="det-title" style="margin:20px 0;">Subject</h1>
-        <div id="task-list"></div>
-        <button class="btn-gui btn-primary" onclick="core.addTask()">+ Add Goal</button>
-        <button class="btn-gui btn-outline" style="margin-top:10px; border-color:var(--red); color:var(--red);" onclick="core.deleteTable()">Delete Subject</button>
+        <div id="search-results" style="margin-top:20px; overflow-y:auto"></div>
     </div>
 
     <div id="view-profile" class="screen">
-        <div class="profile-header">
-            <img id="banner-img" class="banner-img" src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1000" onclick="profile.trigger('banner')">
-            <div class="pfp-container" onclick="profile.trigger('pfp')">
-                <img id="pfp-img" class="pfp-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-            </div>
+        <h1 id="un-display" style="font-size: 40px; font-weight: 800;">Guest</h1>
+        <div id="guest-ui">
+            <button class="btn btn-white" onclick="ui.openModal('signup')">Sign Up</button>
+            <button class="btn btn-glass" style="margin-top:10px" onclick="ui.openModal('login')">Log In</button>
         </div>
-        <div style="padding:60px 25px">
-            <h1 id="un-display" style="margin:0; font-size:32px;">Guest</h1>
-            <div id="pro-badge" style="display:none; color:var(--gold); font-weight:900; font-size:11px; margin-top:5px; text-transform:uppercase;">Peak Member</div>
-            
-            <div id="guest-ui" style="margin-top:40px">
-                <button class="btn-gui btn-primary" onclick="ui.openAuth('signup')">Create Cloud Account</button>
-                <button class="btn-gui btn-outline" onclick="ui.openAuth('login')" style="margin-top:12px">Login to Cloud</button>
-            </div>
-            
-            <div id="user-ui" style="display:none; margin-top:40px">
-                <button class="btn-gui btn-primary" style="background:var(--gold); color:#000" onclick="core.buyPro()">Get Pro ✨</button>
-                <button class="btn-gui btn-outline" style="margin-top:12px; color:var(--red); border-color:var(--red);" onclick="auth.logout()">Log Out</button>
-            </div>
+        <div id="user-ui" style="display:none">
+            <button class="btn btn-glass" style="color:#ff3b30" onclick="auth.logout()">Log Out</button>
         </div>
     </div>
 
-    <nav class="nav-bar">
+    <div id="modal-auth" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(20px); z-index:9000; display:none; align-items:center; justify-content:center; padding:25px;">
+        <div class="glass-panel" style="width:100%; max-width:320px">
+            <h2 id="atitle">Auth</h2>
+            <input type="text" id="au" class="input-apple" placeholder="Username">
+            <input type="password" id="ap" class="input-apple" placeholder="Password">
+            <button class="btn btn-white" onclick="auth.confirm()">Continue</button>
+            <button class="btn btn-glass" style="margin-top:10px" onclick="ui.closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <nav class="dock">
         <div class="nav-item active" onclick="ui.show('home', this)">Home</div>
+        <div class="nav-item" onclick="ui.openSearch()">Search</div>
         <div class="nav-item" onclick="ui.show('profile', this)">Profile</div>
     </nav>
 
 <script>
-    // --- YOUR SPECIFIC FIREBASE ASIA CONFIG ---
+    // --- FIREBASE CONFIG (ASIAN SERVER) ---
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
       projectId: "syllabuspro-4ec5c",
       databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      storageBucket: "syllabuspro-4ec5c.firebasestorage.app",
-      messagingSenderId: "818806284256",
-      appId: "1:818806284256:web:0ae37f2a46e3e812f09585"
+      storageBucket: "syllabuspro-4ec5c.firebasestorage.app"
     };
-
     firebase.initializeApp(firebaseConfig);
     const rtdb = firebase.database();
 
     const db = {
-        user: localStorage.getItem('syl_user'),
-        isPro: localStorage.getItem('syl_pro') === 'true',
-        tables: JSON.parse(localStorage.getItem('syl_tabs')) || [],
-        accounts: JSON.parse(localStorage.getItem('syl_accs')) || {},
-        save() {
-            localStorage.setItem('syl_tabs', JSON.stringify(this.tables));
-            localStorage.setItem('syl_accs', JSON.stringify(this.accounts));
-            localStorage.setItem('syl_user', this.user || "");
-            localStorage.setItem('syl_pro', this.isPro);
-            
+        user: localStorage.getItem('ss_u'),
+        tables: JSON.parse(localStorage.getItem('ss_t')) || [],
+        accounts: JSON.parse(localStorage.getItem('ss_a')) || {},
+        async save() {
+            localStorage.setItem('ss_t', JSON.stringify(this.tables));
+            localStorage.setItem('ss_a', JSON.stringify(this.accounts));
+            localStorage.setItem('ss_u', this.user || "");
             if(this.user) {
-                rtdb.ref('users/' + this.user).set({ 
+                await rtdb.ref('users/' + this.user).set({ 
+                    username: this.user, 
                     tables: this.tables, 
-                    acc: this.accounts[this.user],
-                    pro: this.isPro 
-                }).then(() => ui.notify("Cloud Synced ✨"));
+                    acc: this.accounts[this.user] 
+                });
             }
         }
     };
 
     const ui = {
-        notify(msg) { 
-            const el = document.getElementById('gui-notify'); 
-            document.getElementById('notify-msg').innerText = msg; 
-            el.classList.add('active'); 
-            setTimeout(()=>el.classList.remove('active'), 2500); 
+        show(id, el) {
+            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('screen-active'));
+            document.getElementById('view-'+id).classList.add('screen-active');
+            if(el) { document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
+            this.closeSearch();
         },
-        show(id, el) { 
-            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('screen-active')); 
-            document.getElementById('view-'+id).classList.add('screen-active'); 
-            if(el) { document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
-        },
-        openAuth(m) { auth.mode = m; document.getElementById('atitle').innerText = m === 'signup' ? 'New Cloud Account' : 'Welcome Back'; document.getElementById('modal-auth').style.display='flex'; },
-        openCreate() { document.getElementById('modal-create').style.display='flex'; },
-        close() { document.querySelectorAll('.overlay').forEach(o=>o.style.display='none'); },
+        openSearch() { document.getElementById('search-screen').style.display='flex'; document.getElementById('q').focus(); },
+        closeSearch() { document.getElementById('search-screen').style.display='none'; },
+        openModal(m) { auth.mode = m; document.getElementById('atitle').innerText = (m==='signup'?'Sign Up':'Log In'); document.getElementById('modal-auth').style.display='flex'; },
+        closeModal() { document.getElementById('modal-auth').style.display='none'; },
+        openCreate() { const n = prompt("Subject Name:"); if(n) { db.tables.push({id:Date.now(), name:n, tasks:[]}); db.save(); this.render(); } },
         render() {
             document.getElementById('table-display').innerHTML = db.tables.map(t=>`
-                <div class="custom-card" onclick="ui.openDetail(${t.id})">
-                    <b style="font-size:18px">${t.name}</b><br>
-                    <small style="color:var(--dim)">${t.tasks.length} Goals</small>
-                </div>
-            `).join('');
-        },
-        openDetail(id) {
-            core.activeId = id; const t = db.tables.find(x=>x.id===id);
-            document.getElementById('det-title').innerText = t.name;
-            ui.renderTasks(); ui.show('detail');
-        },
-        renderTasks() {
-            const t = db.tables.find(x=>x.id===core.activeId);
-            document.getElementById('task-list').innerHTML = t.tasks.map((tk, i)=>`
-                <div class="custom-card">
-                    <input class="gui-input" value="${tk.sub}" placeholder="Subject" oninput="core.upd(${i},'sub',this.value)">
-                    <input class="gui-input" value="${tk.task}" placeholder="Task" oninput="core.upd(${i},'task',this.value)">
-                    <input type="date" class="gui-input" value="${tk.date}" oninput="core.upd(${i},'date',this.value)" style="background:#000">
+                <div class="glass-panel">
+                    <div style="font-size:22px; font-weight:700;">${t.name}</div>
+                    <div style="font-size:12px; opacity:0.5; margin-top:5px;">${t.tasks.length} Goals</div>
                 </div>
             `).join('');
         }
     };
 
+    const search = {
+        async run(q) {
+            if(!q || q.length < 1) { document.getElementById('search-results').innerHTML=''; return; }
+            q = q.toLowerCase();
+            let html = '';
+
+            // Search Local Subjects
+            db.tables.filter(t => t.name.toLowerCase().includes(q)).forEach(s => {
+                html += `<div class="result-item">📚 ${s.name} <span style="margin-left:auto; opacity:0.4; font-size:10px;">Local</span></div>`;
+            });
+
+            // Search Global Users
+            try {
+                const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q + "\uf8ff").limitToFirst(5).once('value');
+                if(snap.exists()){
+                    html += `<div style="font-size:10px; opacity:0.5; margin-top:15px; font-weight:800;">GLOBAL USERS</div>`;
+                    snap.forEach(child => {
+                        const u = child.val().username || child.key;
+                        const pfp = `https://api.dicebear.com/7.x/notionists/svg?seed=${u}`;
+                        html += `<div class="result-item"><img src="${pfp}" class="res-avatar"> ${u}</div>`;
+                    });
+                }
+            } catch(e) { console.log(e); }
+
+            document.getElementById('search-results').innerHTML = html;
+        }
+    };
+
     const auth = {
-        mode: 'login',
-        confirm() {
+        async confirm() {
             const u = document.getElementById('au').value.trim();
             const p = document.getElementById('ap').value.trim();
-            if(!u || !p) return ui.notify("Fill all fields");
-
+            if(!u || !p) return;
             if(this.mode === 'signup') {
-                db.accounts[u] = { pass: p, pfp: null, banner: null }; 
-                db.user = u; db.save(); location.reload();
+                db.accounts[u] = { pass: p }; db.user = u; await db.save(); location.reload();
             } else {
-                ui.notify("Checking Cloud...");
-                rtdb.ref('users/' + u).once('value').then(s => {
-                    const data = s.val();
-                    if(data && data.acc.pass === p) {
-                        db.user = u; db.tables = data.tables || []; db.accounts[u] = data.acc; db.isPro = data.pro || false;
+                rtdb.ref('users/' + u).once('value', s => {
+                    const d = s.val();
+                    if(d && d.acc.pass === p) {
+                        db.user = u; db.tables = d.tables || []; db.accounts[u] = d.acc;
                         db.save(); location.reload();
-                    } else ui.notify("Invalid Cloud Login");
+                    } else { alert("Error: User not found"); }
                 });
             }
         },
         logout() { localStorage.clear(); location.reload(); }
     };
 
-    const core = {
-        activeId: null,
-        saveTable() { const n = document.getElementById('subject-input').value; if(n){ db.tables.push({id:Date.now(), name:n, tasks:[]}); db.save(); ui.close(); ui.render(); }},
-        deleteTable() { db.tables = db.tables.filter(t => t.id !== this.activeId); db.save(); ui.show('home'); ui.render(); },
-        addTask() { db.tables.find(x=>x.id===this.activeId).tasks.push({sub:"",task:"",date:""}); db.save(); ui.renderTasks(); },
-        upd(idx,k,v) { db.tables.find(x=>x.id===this.activeId).tasks[idx][k]=v; db.save(); },
-        buyPro() { db.isPro = true; db.save(); ui.notify("Pro Unlocked!"); setTimeout(()=>location.reload(), 1000); }
-    };
-
-    const profile = {
-        trigger(t) { if(db.user) document.getElementById('input-'+t).click(); else ui.notify("Login required"); },
-        upload(t, i) {
-            const f = i.files[0]; 
-            if(f.type === 'image/gif' && !db.isPro) return ui.notify("Pro required for GIFs");
-            const r = new FileReader();
-            r.onload = (e) => { 
-                db.accounts[db.user][t] = e.target.result; 
-                db.save(); 
-                setTimeout(()=>location.reload(), 500); 
-            };
-            r.readAsDataURL(f);
+    window.onload = () => {
+        if(db.user) {
+            document.getElementById('un-display').innerText = db.user;
+            document.getElementById('guest-ui').style.display='none';
+            document.getElementById('user-ui').style.display='block';
         }
+        ui.render();
     };
-
-    // Initial Login Check
-    if(db.user) {
-        document.getElementById('un-display').innerText = db.user;
-        document.getElementById('s-dot').classList.add('status-online');
-        document.getElementById('s-text').innerText = "CLOUD ACTIVE: " + db.user.toUpperCase();
-        document.getElementById('guest-ui').style.display='none'; 
-        document.getElementById('user-ui').style.display='block';
-        const cur = db.accounts[db.user];
-        if(cur && cur.pfp) document.getElementById('pfp-img').src = cur.pfp;
-        if(cur && cur.banner) document.getElementById('banner-img').src = cur.banner;
-    }
-    if(db.isPro) {
-        document.getElementById('pro-badge').style.display = 'block';
-        document.body.classList.add('theme-space');
-    }
-    ui.render();
 </script>
 </body>
 </html>
+
