@@ -18,33 +18,31 @@
         body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
         .wallpaper { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at top right, #1a1c2c, #000); }
 
-        /* SCREENS */
         .screen { position: absolute; inset: 0; padding: 60px 25px 120px; opacity: 0; transform: scale(0.98); pointer-events: none; transition: 0.4s; overflow-y: auto; }
         .screen-active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-        /* GLASS COMPONENTS */
         .glass-panel { background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 0.5px solid var(--border); border-radius: 28px; padding: 20px; margin-bottom: 15px; }
         
-        /* PROFILE ELEMENTS */
-        .banner { width: 100%; height: 160px; border-radius: 25px; object-fit: cover; border: 0.5px solid var(--border); }
-        .pfp-wrap { width: 90px; height: 90px; border-radius: 25px; border: 3px solid #000; margin-top: -45px; margin-left: 20px; overflow: hidden; background: #222; }
+        /* PROFILE */
+        .banner { width: 100%; height: 160px; border-radius: 25px; object-fit: cover; border: 0.5px solid var(--border); background: #222; }
+        .pfp-wrap { width: 90px; height: 90px; border-radius: 25px; border: 4px solid #000; margin-top: -45px; margin-left: 20px; overflow: hidden; background: #333; position: relative; }
         .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .can-edit { cursor: pointer; transition: 0.3s; }
+        .can-edit:hover { filter: brightness(1.2); border-color: #fff; }
 
-        /* SEARCH BAR */
-        .search-wrap { display: flex; gap: 10px; background: rgba(255,255,255,0.1); border: 0.5px solid var(--border); border-radius: 18px; padding: 8px 15px; align-items: center; }
+        .search-wrap { display: flex; gap: 10px; background: rgba(255,255,255,0.1); border: 0.5px solid var(--border); border-radius: 20px; padding: 10px 15px; align-items: center; }
         .search-wrap input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
 
-        /* BUTTONS */
-        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; }
         .btn-main { background: #fff; color: #000; width: 100%; }
         .btn-glass { background: var(--glass); color: #fff; border: 0.5px solid var(--border); }
 
-        /* DOCK */
-        .dock { position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 0.5px solid var(--border); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .dock { position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px; background: rgba(255,255,255,0.1); backdrop-filter: blur(25px); border: 0.5px solid var(--border); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .nav-item.active { color: #fff; }
 
-        .result-item { padding: 12px; border-radius: 15px; background: rgba(255,255,255,0.05); margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+        .result-item { padding: 15px; border-radius: 18px; background: rgba(255,255,255,0.07); margin-top: 8px; display: flex; align-items: center; gap: 12px; border: 0.5px solid var(--border); }
     </style>
 </head>
 <body>
@@ -52,14 +50,14 @@
     <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size: 40px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
+        <h1 style="font-size: 44px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
         <div id="table-display"></div>
         <button class="btn btn-main" onclick="core.createTable()">+ New Subject</button>
     </div>
 
     <div id="view-detail" class="screen">
         <button class="btn btn-glass" onclick="ui.show('home')" style="padding: 10px 20px; margin-bottom: 20px;">← Back</button>
-        <h2 id="det-name" style="font-size: 32px; margin: 0;"></h2>
+        <h2 id="det-name" style="font-size: 32px; margin: 0; font-weight: 800;"></h2>
         <div id="task-list" style="margin: 20px 0;"></div>
         <button class="btn btn-main" onclick="core.addTask()">+ Add Goal</button>
         <button class="btn btn-glass" onclick="core.deleteTable()" style="margin-top:10px; color:#ff3b30; width:100%;">Delete Subject</button>
@@ -67,39 +65,39 @@
 
     <div id="view-search" class="screen">
         <div class="search-wrap">
-            <input type="text" id="sq" placeholder="Search usernames, tables, goals..." onkeydown="if(event.key==='Enter') core.search()">
-            <button onclick="core.search()" style="background:#fff; border:none; border-radius:10px; padding:5px 12px; font-weight:700;">Go</button>
+            <input type="text" id="sq" placeholder="Search Subjects, Goals, or Users..." onkeydown="if(event.key==='Enter') core.search()">
+            <button onclick="core.search()" style="background:#fff; border:none; border-radius:12px; padding:8px 15px; font-weight:700; cursor:pointer;">Search</button>
         </div>
         <div id="search-results" style="margin-top: 20px;"></div>
     </div>
 
     <div id="view-profile" class="screen" style="padding: 0 0 120px;">
-        <img id="p-banner" src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800" class="banner" onclick="core.upload('banner')">
-        <div class="pfp-wrap" onclick="core.upload('pfp')">
+        <img id="p-banner" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800" class="banner" onclick="core.triggerUpload('banner')">
+        <div id="p-pfp-wrap" class="pfp-wrap" onclick="core.triggerUpload('pfp')">
             <img id="p-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest">
         </div>
         <div style="padding: 20px;">
-            <h1 id="un-display" style="margin:0; font-size:38px;">Guest</h1>
-            <p style="opacity:0.5;">Asia Southeast Cloud</p>
-            <div id="auth-ui">
-                <button class="btn btn-main" onclick="ui.openAuth('signup')">Sign Up</button>
-                <button class="btn btn-glass" style="width:100%; margin-top:10px" onclick="ui.openAuth('login')">Log In</button>
+            <h1 id="un-display" style="margin:0; font-size:38px; font-weight:800;">Guest</h1>
+            <p id="profile-tag" style="opacity:0.5; margin-bottom: 30px;">Local Session</p>
+            <div id="guest-controls">
+                <button class="btn btn-main" onclick="ui.openAuth('signup')">Sign up to edit profile</button>
+                <button class="btn btn-glass" style="width:100%; margin-top:10px" onclick="ui.openAuth('login')">Sync Account</button>
             </div>
             <button id="logout-btn" class="btn btn-glass" style="display:none; color:#ff3b30; width:100%;" onclick="core.logout()">Log Out</button>
         </div>
     </div>
 
-    <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(20px); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px;">
+    <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); z-index:9000; display:none; align-items:center; justify-content:center; padding:25px;">
         <div class="glass-panel" style="width:100%; max-width:320px;">
-            <h2 id="m-title">Auth</h2>
-            <input type="text" id="au" style="width:100%; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #444; background:#111; color:#fff;" placeholder="Username">
-            <input type="password" id="ap" style="width:100%; padding:15px; margin-bottom:15px; border-radius:12px; border:1px solid #444; background:#111; color:#fff;" placeholder="Password">
+            <h2 id="m-title" style="margin-top:0">Auth</h2>
+            <input type="text" id="au" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:#fff; margin-bottom:10px;" placeholder="Username">
+            <input type="password" id="ap" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:#fff; margin-bottom:15px;" placeholder="Password">
             <button class="btn btn-main" onclick="core.authConfirm()">Continue</button>
             <button class="btn btn-glass" style="width:100%; margin-top:10px;" onclick="ui.closeModal()">Cancel</button>
         </div>
     </div>
 
-    <input type="file" id="file-in" style="display:none" onchange="core.handleFile(this)">
+    <input type="file" id="file-in" style="display:none" accept="image/*" onchange="core.handleFile(this)">
 
     <nav class="dock">
         <div class="nav-item active" onclick="ui.show('home', this)">Home</div>
@@ -135,73 +133,90 @@
         openAuth(m) { core.authMode = m; document.getElementById('m-title').innerText = m==='signup'?'Sign Up':'Log In'; document.getElementById('modal').style.display='flex'; },
         closeModal() { document.getElementById('modal').style.display='none'; },
         renderHome() {
-            document.getElementById('table-display').innerHTML = db.tables.map((t, i) => `
+            const container = document.getElementById('table-display');
+            container.innerHTML = db.tables.map((t, i) => `
                 <div class="glass-panel" onclick="core.openTable(${i})">
-                    <div style="font-size:22px; font-weight:700;">${t.name}</div>
-                    <div style="opacity:0.5; font-size:12px;">${t.tasks.length} Goals</div>
+                    <div style="font-size:24px; font-weight:800;">${t.name}</div>
+                    <div style="opacity:0.5; font-size:12px;">${t.tasks ? t.tasks.length : 0} Goals</div>
                 </div>
             `).join('');
         }
     };
 
     const core = {
-        authMode: 'login',
-        uploadMode: '',
+        authMode: 'login', uploadMode: '',
         async save() {
             localStorage.setItem('ss_u', db.user || "");
             localStorage.setItem('ss_t', JSON.stringify(db.tables));
             localStorage.setItem('ss_pfp', db.pfp || "");
             localStorage.setItem('ss_bnr', db.banner || "");
-            if(db.user) await rtdb.ref('users/' + db.user).set({ username: db.user, tables: db.tables, pfp: db.pfp, banner: db.banner });
+            if(db.user) {
+                await rtdb.ref('users/' + db.user).set({ 
+                    username: db.user.toLowerCase(), displayName: db.user,
+                    tables: db.tables, pfp: db.pfp || "", banner: db.banner || "" 
+                });
+            }
         },
         createTable() { const n = prompt("Subject Name:"); if(n) { db.tables.push({name:n, tasks:[]}); this.save(); ui.renderHome(); } },
         openTable(i) {
             db.activeTable = i;
-            const t = db.tables[i];
-            document.getElementById('det-name').innerText = t.name;
-            this.renderTasks();
-            ui.show('detail');
+            document.getElementById('det-name').innerText = db.tables[i].name;
+            this.renderTasks(); ui.show('detail');
         },
         renderTasks() {
             const t = db.tables[db.activeTable];
-            document.getElementById('task-list').innerHTML = t.tasks.map((tk, i) => `
-                <div class="glass-panel" style="padding:15px; display:flex; gap:10px;">
-                    <input style="background:none; border:none; color:#fff; flex:1;" value="${tk}" onchange="core.editTask(${i}, this.value)">
-                    <button onclick="core.delTask(${i})" style="background:none; border:none; color:#ff3b30;">✕</button>
+            document.getElementById('task-list').innerHTML = (t.tasks || []).map((tk, i) => `
+                <div class="glass-panel" style="padding:15px; display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <input style="background:none; border:none; color:#fff; flex:1; font-size:16px;" value="${tk}" onchange="core.editTask(${i}, this.value)">
+                    <button onclick="core.delTask(${i})" style="background:none; border:none; color:#ff3b30; cursor:pointer;">✕</button>
                 </div>
             `).join('');
         },
-        addTask() { db.tables[db.activeTable].tasks.push("New Goal"); this.save(); this.renderTasks(); },
+        addTask() { if(!db.tables[db.activeTable].tasks) db.tables[db.activeTable].tasks = []; db.tables[db.activeTable].tasks.push("New Goal"); this.save(); this.renderTasks(); },
         editTask(i, v) { db.tables[db.activeTable].tasks[i] = v; this.save(); },
         delTask(i) { db.tables[db.activeTable].tasks.splice(i, 1); this.save(); this.renderTasks(); },
         deleteTable() { db.tables.splice(db.activeTable, 1); this.save(); ui.renderHome(); ui.show('home'); },
         
         async search() {
             const q = document.getElementById('sq').value.toLowerCase();
-            let h = '';
-            // Local
+            const res = document.getElementById('search-results');
+            res.innerHTML = '<div style="opacity:0.5;">Searching...</div>';
+            let html = '';
+
+            // Search Local Subjects/Goals
             db.tables.forEach((t, i) => {
-                if(t.name.toLowerCase().includes(q)) h += `<div class="result-item" onclick="core.openTable(${i})">📚 ${t.name}</div>`;
-                t.tasks.forEach(tk => { if(tk.toLowerCase().includes(q)) h += `<div class="result-item">🎯 ${tk} <small>(${t.name})</small></div>`; });
+                if(t.name.toLowerCase().includes(q)) html += `<div class="result-item" onclick="core.openTable(${i})">📚 <b>${t.name}</b></div>`;
+                (t.tasks || []).forEach(tk => { if(tk.toLowerCase().includes(q)) html += `<div class="result-item" onclick="core.openTable(${i})">🎯 <b>${tk}</b> in ${t.name}</div>`; });
             });
-            // Cloud Users
-            const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q+"\uf8ff").once('value');
-            snap.forEach(c => {
-                const u = c.val().username;
-                if(u !== db.user) h += `<div class="result-item"><img src="${c.val().pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed='+u}" style="width:30px; border-radius:8px;"> ${u}</div>`;
-            });
-            document.getElementById('search-results').innerHTML = h || "No results found";
+
+            // Search Users in Firebase (Username rule must be active)
+            try {
+                const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q+"\uf8ff").limitToFirst(5).once('value');
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        const val = c.val();
+                        if(val.username !== db.user?.toLowerCase()) {
+                            html += `<div class="result-item"><img src="${val.pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed='+val.username}" style="width:35px; height:35px; border-radius:10px;"> <div><b>${val.displayName || val.username}</b></div></div>`;
+                        }
+                    });
+                }
+            } catch(e) { console.error(e); }
+            res.innerHTML = html || '<div style="opacity:0.3; padding:20px;">No results.</div>';
         },
 
-        upload(m) { this.uploadMode = m; document.getElementById('file-in').click(); },
-        handleFile(i) {
-            const f = i.files[0]; const r = new FileReader();
-            r.onload = (e) => { 
+        triggerUpload(m) { 
+            if(!db.user) { ui.openAuth('signup'); return; }
+            this.uploadMode = m; document.getElementById('file-in').click(); 
+        },
+        handleFile(el) {
+            const file = el.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
                 if(this.uploadMode === 'pfp') { db.pfp = e.target.result; document.getElementById('p-pfp').src = e.target.result; }
                 else { db.banner = e.target.result; document.getElementById('p-banner').src = e.target.result; }
                 this.save();
             };
-            r.readAsDataURL(f);
+            reader.readAsDataURL(file);
         },
 
         async authConfirm() {
@@ -211,7 +226,10 @@
                 db.user = u; await this.save(); location.reload();
             } else {
                 const s = await rtdb.ref('users/'+u).once('value');
-                if(s.exists()) { db.user = u; db.tables = s.val().tables || []; db.pfp = s.val().pfp; db.banner = s.val().banner; this.save(); location.reload(); }
+                if(s.exists()) { 
+                    const d = s.val(); db.user = u; db.tables = d.tables || []; db.pfp = d.pfp; db.banner = d.banner;
+                    this.save(); location.reload();
+                } else { alert("User not found."); }
             }
         },
         logout() { localStorage.clear(); location.reload(); }
@@ -220,11 +238,14 @@
     window.onload = () => {
         if(db.user) {
             document.getElementById('un-display').innerText = db.user;
-            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('profile-tag').innerText = "Cloud Synchronized";
+            document.getElementById('guest-controls').style.display = 'none';
             document.getElementById('logout-btn').style.display = 'block';
-            if(db.pfp) document.getElementById('p-pfp').src = db.pfp;
-            if(db.banner) document.getElementById('p-banner').src = db.banner;
+            document.getElementById('p-banner').classList.add('can-edit');
+            document.getElementById('p-pfp-wrap').classList.add('can-edit');
         }
+        if(db.pfp) document.getElementById('p-pfp').src = db.pfp;
+        if(db.banner) document.getElementById('p-banner').src = db.banner;
         ui.renderHome();
     };
 </script>
