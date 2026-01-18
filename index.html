@@ -2,1398 +2,1535 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Syllabus Titan v9 - The Ultimate Educational Planner">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Syllabus Titan v6.0 Colossus</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <title>Syllabus Titan v9.0 | Obsidian</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-analytics-compat.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* * ==========================================================================
-         * PART 1: CORE VARIABLES & RESET
-         * ==========================================================================
+        /* * ======================================================================================
+         * SYLLABUS TITAN STYLE ENGINE (v9.0)
+         * Author: Gemini
+         * Architecture: Utility-First + Component Classes
+         * ======================================================================================
+         */
+
+        /* --------------------------------------------------------------------------------------
+         * 1. DESIGN TOKENS & VARIABLES
+         * -------------------------------------------------------------------------------------- 
          */
         :root {
-            /* * COLOR PALETTE: Cyber Dark 
-             * Designed for OLED screens and deep contrast.
-             */
-            --c-bg: #050505;
-            --c-surface: rgba(28, 28, 30, 0.65);
-            --c-surface-solid: #1c1c1e;
-            --c-surface-light: rgba(44, 44, 46, 0.8);
+            /* COLOR PALETTE: OBSIDIAN DARK MODE */
+            --titan-bg-deep: #000000;
+            --titan-bg-surface: #0a0a0a;
+            --titan-bg-card: #141414;
+            --titan-bg-highlight: #1f1f1f;
             
-            --c-primary: #2d7af1;
-            --c-primary-dark: #1a5bbd;
-            --c-primary-glow: rgba(45, 122, 241, 0.4);
+            /* PRIMARY BRANDING */
+            --titan-primary: #3b82f6;          /* Electric Blue */
+            --titan-primary-hover: #2563eb;
+            --titan-primary-dim: rgba(59, 130, 246, 0.15);
             
-            --c-accent: #bf5af2;
-            --c-accent-glow: rgba(191, 90, 242, 0.4);
+            /* ACCENTS */
+            --titan-accent: #8b5cf6;           /* Violet */
+            --titan-success: #10b981;          /* Emerald */
+            --titan-danger: #ef4444;           /* Red */
+            --titan-warning: #f59e0b;          /* Amber */
             
-            --c-success: #32d74b;
-            --c-danger: #ff453a;
-            --c-warn: #ffd60a;
-            
-            --c-text-main: #ffffff;
-            --c-text-sec: rgba(255, 255, 255, 0.55);
-            --c-text-ter: rgba(255, 255, 255, 0.3);
-            
-            /* * METRICS & SPACING 
-             */
-            --radius-xl: 32px;
-            --radius-l: 20px;
-            --radius-m: 14px;
-            --radius-s: 8px;
-            
-            --padding-page: 24px;
-            --header-h: 180px;
-            --avatar-size: 90px;
-            --dock-height: 80px;
-            
-            /* * ANIMATION TIMINGS 
-             */
-            --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
-            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --anim-dur-fast: 0.2s;
-            --anim-dur-norm: 0.4s;
-            --anim-dur-slow: 0.8s;
+            /* TEXT HIERARCHY */
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-tertiary: #525252;
+            --text-disabled: #404040;
+
+            /* BORDERS & GLASS */
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(59, 130, 246, 0.5);
+            --glass-bg: rgba(20, 20, 20, 0.7);
+            --glass-blur: 20px;
+
+            /* SPACING SYSTEM */
+            --space-xs: 4px;
+            --space-s: 8px;
+            --space-m: 16px;
+            --space-l: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+
+            /* BORDER RADIUS */
+            --radius-s: 6px;
+            --radius-m: 12px;
+            --radius-l: 18px;
+            --radius-xl: 28px;
+            --radius-round: 9999px;
+
+            /* ANIMATION CURVES */
+            --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+            --ease-sharp: cubic-bezier(0.0, 0.0, 0.2, 1);
+            --dur-fast: 150ms;
+            --dur-normal: 300ms;
+            --dur-slow: 500ms;
+
+            /* Z-INDEX LAYERS */
+            --z-back: -1;
+            --z-base: 0;
+            --z-sticky: 100;
+            --z-dock: 500;
+            --z-modal: 1000;
+            --z-toast: 2000;
+            --z-debug: 9999;
+
+            /* SAFE AREAS */
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
 
-        /* * GLOBAL RESET 
+        /* --------------------------------------------------------------------------------------
+         * 2. RESET & BASE
+         * -------------------------------------------------------------------------------------- 
          */
-        *, *::before, *::after { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            outline: none; 
-            user-select: none; 
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            user-select: none; /* Prevent text selection in UI */
         }
 
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            background: var(--c-bg); 
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            color: var(--c-text-main); 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* App handles scrolling internally */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--titan-bg-deep);
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* * ==========================================================================
-         * PART 2: ANIMATED BACKGROUND ENGINE
-         * ==========================================================================
+        /* --------------------------------------------------------------------------------------
+         * 3. LAYOUT ENGINE (THE VIEWPORT)
+         * -------------------------------------------------------------------------------------- 
          */
-        .live-background {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            z-index: -1;
-            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a0b2e);
-            background-size: 400% 400%;
-            animation: gradientMove 15s ease infinite;
+        #titan-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: var(--z-base);
         }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .screen-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
         }
 
-        /* * ==========================================================================
-         * PART 3: LAYOUT & CONTAINERS
-         * ==========================================================================
-         */
-        #app-root { 
-            position: relative; 
-            width: 100%; 
-            height: 100%; 
-        }
-        
-        .screen {
-            position: absolute; 
-            inset: 0; 
-            padding: var(--padding-page); 
-            padding-bottom: 120px; /* Space for Dock */
-            overflow-y: auto; 
-            scrollbar-width: none;
-            opacity: 0; 
-            pointer-events: none; 
-            transform: scale(0.96) translateY(10px);
+        .view-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: var(--space-l);
+            padding-bottom: calc(80px + var(--safe-bottom)); /* Clear the dock */
+            padding-top: calc(20px + var(--safe-top));
+            
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
             transition: 
-                opacity var(--anim-dur-norm) var(--ease-expo), 
-                transform var(--anim-dur-norm) var(--ease-expo);
-        }
-        
-        .screen::-webkit-scrollbar { display: none; }
-        
-        .screen.active { 
-            opacity: 1; 
-            pointer-events: auto; 
-            transform: scale(1) translateY(0); 
+                opacity var(--dur-normal) var(--ease-smooth),
+                transform var(--dur-normal) var(--ease-spring);
         }
 
-        /* * TYPOGRAPHY SYSTEM 
-         */
-        h1 { font-size: 34px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -1px; }
-        h2 { font-size: 22px; font-weight: 700; margin: 0 0 16px 0; }
-        h3 { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; }
-        p { font-size: 16px; color: var(--c-text-sec); line-height: 1.5; margin: 0; }
-        
-        .subtext { 
-            font-size: 13px; 
-            color: var(--c-text-sec); 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            margin-bottom: 8px; 
-            display: block; 
+        .view-page.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
         }
 
-        /* * COMPONENT: CARDS (Glassmorphism) 
+        /* Scrollbar hiding */
+        .view-page::-webkit-scrollbar { display: none; }
+        .view-page { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --------------------------------------------------------------------------------------
+         * 4. COMPONENT: CARDS & CONTAINERS
+         * -------------------------------------------------------------------------------------- 
          */
         .card {
-            background: var(--c-surface);
-            backdrop-filter: blur(25px); 
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--titan-bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: var(--radius-l);
-            padding: 20px; 
-            margin-bottom: 16px;
-            position: relative; 
-            overflow: hidden;
-            transition: transform 0.2s, background 0.2s;
+            padding: var(--space-l);
+            margin-bottom: var(--space-m);
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            /* GPU Acceleration to prevent flickering */
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
-        
-        .card.interactive:active { 
-            transform: scale(0.98); 
-            background: rgba(255,255,255,0.15); 
+
+        .card-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border-subtle);
         }
-        
-        .card-row {
+
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        
-        .card-icon {
-            width: 40px; 
-            height: 40px; 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            margin-bottom: var(--space-m);
         }
 
-        /* * COMPONENT: BUTTONS 
+        .card-interactive {
+            cursor: pointer;
+            transition: transform var(--dur-fast), background-color var(--dur-fast);
+        }
+
+        .card-interactive:active {
+            transform: scale(0.98);
+            background-color: var(--titan-bg-highlight);
+        }
+
+        /* --------------------------------------------------------------------------------------
+         * 5. COMPONENT: TYPOGRAPHY
+         * -------------------------------------------------------------------------------------- 
+         */
+        h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 700; color: var(--text-primary); }
+        
+        .display-1 { font-size: 36px; letter-spacing: -1px; margin-bottom: var(--space-s); }
+        .display-2 { font-size: 28px; letter-spacing: -0.5px; margin-bottom: var(--space-s); }
+        .heading-3 { font-size: 20px; margin-bottom: var(--space-xs); }
+        
+        .text-body { font-size: 15px; color: var(--text-secondary); margin-bottom: 4px; }
+        .text-small { font-size: 13px; color: var(--text-tertiary); }
+        .text-label { 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            color: var(--text-tertiary); 
+            font-weight: 800;
+            display: block;
+            margin-bottom: var(--space-s);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --------------------------------------------------------------------------------------
+         * 6. COMPONENT: BUTTONS (Fixed Black Line Bug)
+         * -------------------------------------------------------------------------------------- 
          */
         .btn {
-            width: 100%; 
-            height: 56px; 
-            border: none; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 54px;
+            padding: 0 var(--space-l);
+            background: var(--titan-bg-highlight);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle); /* Explicit border to fix rendering artifacts */
             border-radius: var(--radius-m);
-            font-size: 17px; 
-            font-weight: 600; 
-            font-family: inherit; 
-            color: #fff;
-            background: rgba(255,255,255,0.1); 
-            margin-top: 12px;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 8px;
-            cursor: pointer; 
-            position: relative; 
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--dur-fast);
+            position: relative;
             overflow: hidden;
-            transition: transform 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: var(--titan-primary);
+            color: #ffffff;
+            border: 1px solid var(--titan-primary); /* Prevents black hairline gaps */
+            box-shadow: 0 4px 15px var(--titan-primary-dim);
         }
         
-        .btn-primary { 
-            background: var(--c-primary); 
-            box-shadow: 0 8px 20px -6px var(--c-primary-glow); 
+        .btn-primary:active {
+            box-shadow: 0 2px 8px var(--titan-primary-dim);
         }
-        
-        .btn-danger { 
-            background: rgba(255, 69, 58, 0.15); 
-            color: var(--c-danger); 
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--titan-danger);
+            border-color: rgba(239, 68, 68, 0.2);
         }
-        
-        .btn:active { 
-            transform: scale(0.97); 
-            opacity: 0.9; 
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--titan-success);
+            border-color: rgba(16, 185, 129, 0.2);
         }
-        
+
+        .btn-ghost {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+
+        .btn-icon {
+            width: 44px;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
         .btn-sm {
             height: 36px;
-            font-size: 14px;
+            font-size: 13px;
+            padding: 0 var(--space-m);
             width: auto;
-            padding: 0 16px;
-            margin: 0;
         }
 
-        /* * COMPONENT: INPUTS 
+        /* --------------------------------------------------------------------------------------
+         * 7. COMPONENT: FORMS & INPUTS
+         * -------------------------------------------------------------------------------------- 
          */
-        .inp-wrap { margin-bottom: 16px; }
-        
-        .inp {
-            width: 100%; 
-            height: 54px; 
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1); 
+        .form-group {
+            margin-bottom: var(--space-m);
+            width: 100%;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 54px;
+            background: var(--titan-bg-surface);
+            border: 1px solid var(--border-subtle);
             border-radius: var(--radius-m);
-            padding: 0 16px; 
-            color: white; 
-            font-size: 16px; 
-            font-family: inherit;
-            transition: 0.3s;
-        }
-        
-        .inp:focus { 
-            border-color: var(--c-primary); 
-            box-shadow: 0 0 0 3px var(--c-primary-glow); 
-            background: rgba(0,0,0,0.5); 
-        }
-        
-        .inp:disabled {
-            opacity: 0.5;
-            background: rgba(0,0,0,0.2);
-            cursor: not-allowed;
-            border-style: dashed;
+            padding: 0 var(--space-m);
+            font-size: 16px;
+            color: var(--text-primary);
+            transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+            appearance: none; /* Removes native UI styling */
         }
 
-        /* * ==========================================================================
-         * PART 4: SPECIFIC MODULES (Profile, Dock, Chat)
-         * ==========================================================================
-         */
-
-        /* Profile Hero */
-        .profile-hero {
-            position: relative;
-            width: 100%;
-            height: calc(var(--header-h) + (var(--avatar-size) / 2));
-            margin-bottom: 20px;
-        }
-        
-        .profile-banner {
-            width: 100%; 
-            height: var(--header-h);
-            background: #222; 
-            border-radius: var(--radius-l);
-            overflow: hidden; 
-            position: relative;
-        }
-        
-        .profile-banner img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .profile-avatar {
-            width: var(--avatar-size); 
-            height: var(--avatar-size);
-            border-radius: 30px;
-            background: #333;
-            border: 4px solid var(--c-bg);
-            position: absolute;
-            left: 24px;
-            bottom: 0;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-        
-        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Navigation Dock */
-        .dock-container {
-            position: fixed; 
-            bottom: 30px; 
-            left: 0; 
-            width: 100%;
-            display: flex; 
-            justify-content: center; 
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        .dock {
-            background: rgba(20, 20, 20, 0.85);
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px 24px; 
-            border-radius: 40px;
-            display: flex; 
-            gap: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            pointer-events: auto;
-            transform: translateY(0); 
-            transition: 0.4s var(--ease-elastic);
-        }
-        
-        .dock.hidden { transform: translateY(150px); }
-
-        .dock-btn {
-            position: relative; 
-            width: 44px; 
-            height: 44px;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            color: var(--c-text-sec); 
-            transition: 0.3s;
-        }
-        
-        .dock-btn svg { width: 26px; height: 26px; fill: currentColor; }
-        
-        .dock-btn.active { 
-            color: var(--c-primary); 
-            transform: translateY(-5px); 
-        }
-        
-        .dock-btn.active::after {
-            content:''; 
-            position: absolute; 
-            bottom: -8px; 
-            width: 4px; 
-            height: 4px;
-            background: var(--c-primary); 
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--c-primary);
+        .input-field:focus {
+            border-color: var(--titan-primary);
+            box-shadow: 0 0 0 4px var(--titan-primary-dim);
         }
 
-        /* * CHAT SYSTEM STYLES 
-         */
-        #chat-interface {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            background: var(--c-bg);
-            z-index: 200;
-            transform: translateX(100%);
-            transition: transform 0.3s var(--ease-expo);
+        .input-field::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        /* Search Result Styling */
+        .search-results-container {
+            margin-top: var(--space-m);
+            max-height: 200px;
+            overflow-y: auto;
         }
         
-        #chat-interface.open { transform: translateX(0); }
-
-        .chat-header {
-            height: 80px;
-            padding: 20px;
-            padding-top: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            background: rgba(20,20,20,0.9);
-            backdrop-filter: blur(10px);
+        .search-item {
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: space-between;
+            padding: var(--space-m);
+            border-bottom: 1px solid var(--border-subtle);
+            animation: fadeIn var(--dur-fast) ease-in;
+        }
+        
+        .search-item:last-child { border-bottom: none; }
+
+        /* --------------------------------------------------------------------------------------
+         * 8. COMPONENT: NAVIGATION DOCK
+         * -------------------------------------------------------------------------------------- 
+         */
+        .dock-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: var(--z-dock);
+            width: auto;
         }
 
-        .chat-body {
+        .dock {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 12px 28px;
+            background: rgba(28, 28, 28, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .dock-item {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--dur-normal) var(--ease-spring);
+        }
+
+        .dock-item svg {
+            width: 26px;
+            height: 26px;
+            fill: currentColor;
+            transition: transform var(--dur-fast);
+        }
+
+        .dock-item.active {
+            color: var(--titan-primary);
+            transform: translateY(-8px);
+        }
+
+        .dock-item.active svg {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px var(--titan-primary-dim));
+        }
+
+        .dock-indicator {
+            position: absolute;
+            bottom: -6px;
+            width: 4px;
+            height: 4px;
+            background: var(--titan-primary);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--dur-fast);
+        }
+
+        .dock-item.active .dock-indicator { opacity: 1; }
+
+        /* --------------------------------------------------------------------------------------
+         * 9. COMPONENT: MODALS (Fixed Infinite Loop Bug)
+         * -------------------------------------------------------------------------------------- 
+         */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: var(--z-modal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-normal);
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-body {
+            width: 90%;
+            max-width: 400px;
+            background: #121212;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            transform: scale(0.9) translateY(20px);
+            transition: transform var(--dur-normal) var(--ease-spring);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-m);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-overlay.open .modal-body {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: var(--space-m);
+            margin-top: var(--space-m);
+        }
+
+        /* --------------------------------------------------------------------------------------
+         * 10. COMPONENT: CHAT UI (Fixed Weird Message CSS)
+         * -------------------------------------------------------------------------------------- 
+         */
+        #chat-interface {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000;
+            z-index: var(--z-modal);
+            transform: translateX(100%);
+            transition: transform var(--dur-normal) var(--ease-smooth);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-interface.active {
+            transform: translateX(0);
+        }
+
+        .chat-header {
+            height: 90px;
+            padding: var(--space-l);
+            padding-top: calc(var(--safe-top) + 20px);
+            background: rgba(18, 18, 18, 0.95);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: var(--space-m);
+        }
+
+        .chat-scroll-area {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: var(--space-l);
             display: flex;
             flex-direction: column;
             gap: 12px;
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
         }
 
         .chat-footer {
-            padding: 15px;
-            padding-bottom: 30px;
-            background: rgba(20,20,20,0.9);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: var(--space-m);
+            padding-bottom: calc(var(--safe-bottom) + 20px);
+            background: #121212;
+            border-top: 1px solid var(--border-subtle);
             display: flex;
-            gap: 10px;
+            gap: var(--space-s);
+            align-items: center;
         }
 
-        .msg {
+        .message-bubble {
             max-width: 75%;
             padding: 12px 18px;
             border-radius: 20px;
             font-size: 15px;
             line-height: 1.4;
             position: relative;
-            animation: popIn 0.3s var(--ease-elastic);
+            word-wrap: break-word;
         }
-        
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        .msg.me {
+        .message-bubble.sent {
             align-self: flex-end;
-            background: var(--c-primary);
+            background: var(--titan-primary);
             color: white;
             border-bottom-right-radius: 4px;
         }
 
-        .msg.other {
+        .message-bubble.received {
             align-self: flex-start;
-            background: var(--c-surface-light);
+            background: #262626;
             color: white;
             border-bottom-left-radius: 4px;
-        }
-        
-        .msg-time {
-            font-size: 10px;
-            opacity: 0.6;
-            margin-top: 4px;
-            display: block;
-            text-align: right;
+            border: 1px solid #333;
         }
 
-        /* * ==========================================================================
-         * PART 5: NOTIFICATIONS & MODALS
-         * ==========================================================================
+        /* --------------------------------------------------------------------------------------
+         * 11. UTILITIES & ANIMATIONS
+         * -------------------------------------------------------------------------------------- 
          */
-        #toast-zone {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            padding: 20px;
-            pointer-events: none; 
-            z-index: 2000; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            align-items: center;
-        }
-        
-        .toast {
-            background: rgba(30,30,30,0.95); 
-            backdrop-filter: blur(10px);
-            padding: 12px 24px; 
-            border-radius: 30px; 
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white; 
-            font-size: 14px; 
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideDown 0.4s var(--ease-elastic);
-        }
-        
-        @keyframes slideDown { 
-            from { transform: translateY(-100%); opacity:0; } 
-            to { transform: translateY(0); opacity:1; } 
-        }
-
-        .modal-overlay {
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.8); 
-            backdrop-filter: blur(5px);
-            z-index: 1500; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            opacity: 0; 
-            pointer-events: none; 
-            transition: 0.3s;
-        }
-        
-        .modal-overlay.open { opacity: 1; pointer-events: auto; }
-        
-        .modal-box {
-            width: 85%; 
-            max-width: 400px; 
-            background: #1c1c1e;
-            border-radius: 28px; 
-            padding: 24px; 
-            border: 1px solid rgba(255,255,255,0.1);
-            transform: scale(0.9); 
-            transition: 0.3s var(--ease-elastic);
-        }
-        
-        .modal-overlay.open .modal-box { transform: scale(1); }
-
-        /* Intro Sequence */
-        #intro-layer {
-            position: fixed; 
-            inset: 0; 
-            background: #000; 
-            z-index: 9999;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            flex-direction: column;
-            transition: opacity 0.8s ease, visibility 0.8s;
-        }
-        
-        .intro-logo {
-            width: 80px; 
-            height: 80px; 
-            background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-            border-radius: 24px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            box-shadow: 0 0 50px var(--c-primary-glow);
-            animation: introBounce 1.2s var(--ease-elastic) forwards;
-        }
-        
-        .intro-text {
-            margin-top: 20px; 
-            font-size: 24px; 
-            font-weight: 700; 
-            letter-spacing: -0.5px;
-            opacity: 0; 
-            animation: fadeUp 0.8s 0.5s forwards;
-        }
-        
-        @keyframes introBounce { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Helpers */
         .hidden { display: none !important; }
-        .back-nav { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; opacity: 0.7; margin-bottom: 20px; cursor: pointer; }
         
-        /* List Animation Staggering */
-        .list-anim > * { animation: fadeUpList 0.5s backwards; }
-        .list-anim > *:nth-child(1) { animation-delay: 0.05s; }
-        .list-anim > *:nth-child(2) { animation-delay: 0.1s; }
-        .list-anim > *:nth-child(3) { animation-delay: 0.15s; }
-        .list-anim > *:nth-child(4) { animation-delay: 0.2s; }
-        .list-anim > *:nth-child(5) { animation-delay: 0.25s; }
-        @keyframes fadeUpList { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .spin-loader {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed; top: var(--safe-top); left: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            pointer-events: none; z-index: var(--z-toast);
+        }
+
+        .toast-message {
+            background: rgba(30,30,30,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid var(--border-subtle);
+            color: white; font-weight: 500; font-size: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideDown 0.3s var(--ease-spring);
+        }
+
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     </style>
 </head>
 <body>
+    <div style="position:fixed; inset:0; z-index:-1; background: radial-gradient(circle at 50% 120%, #1a1a2e, #000000 80%); pointer-events:none;"></div>
 
-    <div class="live-background"></div>
-    
-    <div id="intro-layer">
-        <div class="intro-logo">
-            <svg style="width:40px; fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <div id="titan-viewport">
         </div>
-        <div class="intro-text">TITAN COLOSSUS</div>
-    </div>
 
-    <div id="app-root"></div>
-
-    <div id="toast-zone"></div>
-
-    <div class="dock-container">
-        <div id="main-dock" class="dock">
-            </div>
+    <div class="dock-container" id="nav-dock-wrapper" style="display:none;">
+        <nav class="dock" id="nav-dock">
+            </nav>
     </div>
 
     <div id="chat-interface">
         <div class="chat-header">
-            <div onclick="Chat.close()" style="padding:10px; margin-left:-10px; cursor:pointer;">
-                <svg viewBox="0 0 24 24" style="width:24px; fill:white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <button class="btn btn-icon btn-ghost" onclick="ChatModule.close()">
+                <svg viewBox="0 0 24 24" style="width:24px; fill:white;"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <div>
+                <h3 id="chat-title">User</h3>
+                <span class="text-label" style="color:var(--titan-success); margin:0;">ENCRYPTED v9</span>
             </div>
-            <div style="flex:1; text-align:center; font-weight:700; font-size:18px;" id="chat-title">
-                Chat
-            </div>
-            <div style="width:24px;"></div> </div>
-        <div class="chat-body" id="chat-messages">
+        </div>
+        <div class="chat-scroll-area" id="chat-feed">
             </div>
         <div class="chat-footer">
-            <input id="chat-inp" class="inp" placeholder="Type a message..." style="height:44px; border-radius:22px;">
-            <button class="btn btn-primary" onclick="Chat.send()" style="width:50px; height:44px; margin:0; border-radius:22px;">
+            <input type="text" id="chat-input" class="input-field" placeholder="Type a message..." style="border-radius:25px;">
+            <button class="btn btn-primary" onclick="ChatModule.send()" style="width:54px; border-radius:50%; padding:0;">
                 <svg viewBox="0 0 24 24" style="width:20px; fill:white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </div>
     </div>
 
-    <div id="modal-base" class="modal-overlay">
-        <div class="modal-box">
-            <h2 id="m-title">Title</h2>
-            <div id="m-body"></div>
-            <div style="display:flex; gap:12px; margin-top:24px;">
-                <button id="m-btn-p" class="btn btn-primary">Confirm</button>
-                <button id="m-btn-s" class="btn">Cancel</button>
+    <div id="wb-layer" style="position:fixed; inset:0; z-index:1500; background:#000; display:none; flex-direction:column;">
+        <div class="chat-header" style="justify-content:space-between; background:#000;">
+            <button class="btn btn-icon btn-ghost" onclick="Whiteboard.close()">
+                <svg viewBox="0 0 24 24" style="width:24px; fill:white;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <h3 class="heading-3">Canvas</h3>
+            <button class="btn btn-sm btn-primary" onclick="Whiteboard.save()">Save</button>
+        </div>
+        <canvas id="wb-canvas" style="flex:1; touch-action:none; background:#050505;"></canvas>
+        <div style="height:80px; background:#111; display:flex; align-items:center; justify-content:center; gap:20px; border-top:1px solid #333;">
+            <div onclick="Whiteboard.setColor('#ffffff')" class="wb-tool" style="width:30px; height:30px; background:white; border-radius:50%;"></div>
+            <div onclick="Whiteboard.setColor('#3b82f6')" class="wb-tool" style="width:30px; height:30px; background:#3b82f6; border-radius:50%;"></div>
+            <div onclick="Whiteboard.setColor('#ef4444')" class="wb-tool" style="width:30px; height:30px; background:#ef4444; border-radius:50%;"></div>
+            <div onclick="Whiteboard.wipe()" style="color:#666; font-size:12px; font-weight:bold; cursor:pointer;">CLEAR</div>
+        </div>
+    </div>
+
+    <div id="modal-layer" class="modal-overlay">
+        <div class="modal-body">
+            <h2 id="modal-title" class="heading-3">Title</h2>
+            <div id="modal-content"></div>
+            <div class="modal-actions">
+                <button id="modal-cancel" class="btn btn-ghost" style="flex:1">Cancel</button>
+                <button id="modal-confirm" class="btn btn-primary" style="flex:1">Confirm</button>
             </div>
         </div>
     </div>
 
-    <input type="file" id="file-helper" hidden accept="image/*">
+    <div id="toast-layer" class="toast-container"></div>
 
-<script>
-/**
- * ============================================================================
- * SYLLABUS TITAN v6.0 - THE COLOSSUS ENGINE
- * A production-grade, single-file JS Framework.
- * ============================================================================
- */
-
-/* * ----------------------------------------------------------------------------
- * MODULE 1: CONSTANTS & ASSETS
- * ----------------------------------------------------------------------------
- */
-const CONFIG = {
-    firebase: {
-        apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", // Demo Key
-        projectId: "syllabuspro-4ec5c",
-        databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/"
-    },
-    assets: {
-        defPfp: 'https://api.dicebear.com/7.x/initials/svg?seed=',
-        defBanner: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80',
-        emptyChat: 'https://via.placeholder.com/400x300?text=No+Messages'
-    }
-};
-
-const ICONS = {
-    home: `<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
-    search: `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`,
-    profile: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
-    settings: `<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
-    back: `<svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`,
-    family: `<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
-    chat: `<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>`
-};
-
-/* * ----------------------------------------------------------------------------
- * MODULE 2: DATA ENGINE (Hybrid Cloud/Local)
- * ----------------------------------------------------------------------------
- */
-class DataEngine {
-    constructor() {
-        firebase.initializeApp(CONFIG.firebase);
-        this.db = firebase.database();
-        this.localKey = 'syll_titan_v6';
-        this.mode = 'guest'; 
-        this.user = null; 
-        
-        // Initial Local Load
-        this.cache = this._loadLocal();
-    }
-
+    <script>
     /**
-     * Loads data from LocalStorage for persistence in Guest Mode.
+     * TITAN CORE v9.0
+     * Architecture: Singleton State Store + Functional Views
      */
-    _loadLocal() {
-        try {
-            const raw = localStorage.getItem(this.localKey);
-            return raw ? JSON.parse(raw) : this._getEmptySchema();
-        } catch (e) {
-            console.error("Local Load Failed", e);
-            return this._getEmptySchema();
-        }
-    }
 
-    _getEmptySchema() {
-        return { subjects: [], family: [], invites: [], pfp: null, bnr: null };
-    }
+    /* CONFIGURATION */
+    const CONFIG = {
+        firebase: {
+            apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", // Standard Public Key
+            authDomain: "syllabuspro-4ec5c.firebaseapp.com",
+            databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "syllabuspro-4ec5c",
+            storageBucket: "syllabuspro-4ec5c.appspot.com",
+            messagingSenderId: "1073868222687",
+            appId: "1:1073868222687:web:866299d511394595861491"
+        },
+        version: "9.0.0-Obsidian",
+        debug: false
+    };
 
-    _saveLocal() {
-        localStorage.setItem(this.localKey, JSON.stringify(this.cache));
-    }
+    /* ICONS REPOSITORY (SVG Strings) */
+    const ICONS = {
+        home: '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>',
+        users: '<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>',
+        user: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+        plus: '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
+        check: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+        trash: '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>'
+    };
 
-    /**
-     * Authentication: Login
-     * Connects to Firebase and starts Realtime Listeners.
-     */
-    async login(u, p) {
-        const snap = await this.db.ref('users/' + u).once('value');
-        if (!snap.exists()) throw new Error("User not found");
-        if (snap.val().pass !== p) throw new Error("Wrong password");
-        
-        this.mode = 'cloud';
-        this.user = u;
-        
-        // Start Data Listener
-        this.db.ref('users/' + u).on('value', s => {
-            this.cache = s.val() || this._getEmptySchema();
-            App.render(); 
-        });
-        
-        return true;
-    }
-
-    /**
-     * Authentication: Signup
-     * Creates new record and migrates local data.
-     */
-    async signup(u, p) {
-        const ref = this.db.ref('users/' + u);
-        const snap = await ref.once('value');
-        if (snap.exists()) throw new Error("Username taken");
-        
-        const payload = { ...this.cache, user: u, pass: p, joined: Date.now() };
-        await ref.set(payload);
-        return this.login(u, p);
-    }
-
-    logout() {
-        if(this.mode === 'cloud') {
-            this.db.ref('users/' + this.user).off();
-        }
-        this.mode = 'guest';
-        this.user = null;
-        this.cache = this._loadLocal(); 
-        App.router.go('home');
-        App.toast("Logged Out");
-    }
-
-    /**
-     * Universal Save Function.
-     * Handles divergence between Guest (Local) and User (Cloud).
-     */
-    save(path, value) {
-        if(path === 'root') this.cache = value;
-        else this.cache[path] = value;
-
-        if (this.mode === 'guest') {
-            this._saveLocal();
-            App.render();
-        } else {
-            this.db.ref('users/' + this.user).update(this.cache);
-        }
-    }
-
-    /* --- CLOUD OPERATIONS --- */
-    
-    async searchUsers(query) {
-        if(this.mode === 'guest') return [];
-        const snap = await this.db.ref('users').once('value');
-        const results = [];
-        snap.forEach(c => {
-            const val = c.val();
-            // Safety Check
-            if(val && val.user && typeof val.user === 'string' && val.user.toLowerCase().includes(query.toLowerCase())) {
-                results.push(val);
+    /* ----------------------------------------------------------------------
+     * MODULE: DATA KERNEL (Firebase Wrapper + LocalStorage Fallback)
+     * ---------------------------------------------------------------------- */
+    class DataKernel {
+        constructor() {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+                this.db = firebase.database();
+                this.auth = firebase.auth();
+                this.isOnline = navigator.onLine;
+                
+                // Monitor Connection
+                window.addEventListener('online', () => this.isOnline = true);
+                window.addEventListener('offline', () => this.isOnline = false);
+                
+                console.log(`[Titan] Kernel Initialized: ${CONFIG.version}`);
+            } catch (e) {
+                console.error("[Titan] Critical Firebase Error", e);
+                alert("Database Connection Failed. Running in Offline Mode.");
             }
-        });
-        return results;
-    }
-
-    async getPublicProfile(username) {
-        const snap = await this.db.ref('users/' + username).once('value');
-        return snap.exists() ? snap.val() : null;
-    }
-
-    async sendInvite(target) {
-        if(this.mode === 'guest') throw new Error("Sign in to use family features");
-        if(target === this.user) throw new Error("Cannot invite self");
-        
-        const ref = this.db.ref('users/' + target + '/invites');
-        const snap = await ref.once('value');
-        const list = snap.val() || [];
-        
-        if(list.includes(this.user)) throw new Error("Already invited");
-        
-        list.push(this.user);
-        await ref.set(list);
-    }
-}
-
-/* * ----------------------------------------------------------------------------
- * MODULE 3: CHAT MANAGER (Real-Time)
- * ----------------------------------------------------------------------------
- */
-class ChatManager {
-    constructor() {
-        this.activeChatId = null;
-        this.listener = null;
-    }
-
-    /**
-     * Generates a unique Chat ID based on two usernames.
-     * Sorts alphabetically so "A chat B" is same ID as "B chat A".
-     */
-    getChatId(userA, userB) {
-        return [userA, userB].sort().join('_');
-    }
-
-    /**
-     * Opens a chat room.
-     */
-    open(otherUser) {
-        if(Engine.mode === 'guest') {
-            App.toast("Guests cannot use Chat");
-            Modals.open('guestLock');
-            return;
         }
 
-        const chatId = this.getChatId(Engine.user, otherUser);
-        this.activeChatId = chatId;
-        
-        // UI Setup
-        document.getElementById('chat-title').innerText = otherUser;
-        document.getElementById('chat-interface').classList.add('open');
-        document.getElementById('chat-messages').innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5">Loading secure channel...</div>';
-
-        // Firebase Listener
-        const chatRef = Engine.db.ref('chats/' + chatId);
-        this.listener = chatRef.limitToLast(50).on('value', snapshot => {
-            const msgs = [];
-            snapshot.forEach(c => msgs.push(c.val()));
-            this.renderMessages(msgs);
-        });
-    }
-
-    close() {
-        document.getElementById('chat-interface').classList.remove('open');
-        if(this.activeChatId && this.listener) {
-            Engine.db.ref('chats/' + this.activeChatId).off();
-        }
-        this.activeChatId = null;
-    }
-
-    send() {
-        if(!this.activeChatId) return;
-        const inp = document.getElementById('chat-inp');
-        const txt = inp.value.trim();
-        if(!txt) return;
-
-        const msgPayload = {
-            sender: Engine.user,
-            text: txt,
-            ts: Date.now()
-        };
-
-        Engine.db.ref('chats/' + this.activeChatId).push(msgPayload);
-        inp.value = '';
-    }
-
-    renderMessages(msgs) {
-        const container = document.getElementById('chat-messages');
-        if(msgs.length === 0) {
-            container.innerHTML = '<div style="text-align:center; margin-top:50px; opacity:0.5;">No messages yet.<br>Say hello!</div>';
-            return;
+        get user() {
+            return this.auth.currentUser;
         }
 
-        let html = '';
-        msgs.forEach(m => {
-            const isMe = m.sender === Engine.user;
-            const date = new Date(m.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            html += `
-                <div class="msg ${isMe ? 'me' : 'other'}">
-                    ${m.text}
-                    <span class="msg-time">${date}</span>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-        container.scrollTop = container.scrollHeight;
-    }
-}
+        /* AUTHENTICATION */
+        async signIn(email, pass) {
+            try {
+                await this.auth.signInWithEmailAndPassword(email, pass);
+                return { success: true };
+            } catch (e) {
+                return { success: false, error: e.message };
+            }
+        }
 
-/* * ----------------------------------------------------------------------------
- * MODULE 4: ROUTER & UI FRAMEWORK
- * ----------------------------------------------------------------------------
- */
-class Router {
-    constructor() {
-        this.routes = {};
-        this.history = [];
-        this.current = null;
-    }
-    
-    register(name, renderer) { this.routes[name] = renderer; }
-    
-    go(name, params = null) {
-        this.history.push(name);
-        this.current = name;
-        
-        // Screen Transition Logic
-        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-        
-        let el = document.getElementById('view-' + name);
-        if(!el) {
-            el = document.createElement('div');
-            el.id = 'view-' + name;
-            el.className = 'screen';
-            document.getElementById('app-root').appendChild(el);
+        async signUp(email, pass, username) {
+            try {
+                // 1. Check if username exists (Atomic check)
+                const userRef = this.db.ref('usernames/' + username);
+                const snapshot = await userRef.once('value');
+                if (snapshot.exists()) throw new Error("Username already taken.");
+
+                // 2. Create Auth User
+                const cred = await this.auth.createUserWithEmailAndPassword(email, pass);
+                
+                // 3. Write Profile Data
+                const uid = cred.user.uid;
+                await this.db.ref('users/' + uid).set({
+                    username: username,
+                    email: email,
+                    created: Date.now(),
+                    subjects: []
+                });
+                
+                // 4. Reserve Username
+                await userRef.set(uid);
+                
+                return { success: true };
+            } catch (e) {
+                return { success: false, error: e.message };
+            }
+        }
+
+        async signOut() {
+            await this.auth.signOut();
+        }
+
+        /* DATA OPS */
+        async getUserProfile(uid) {
+            if (!uid) return null;
+            const snap = await this.db.ref(`users/${uid}`).once('value');
+            return snap.val();
         }
         
-        // Render View
-        el.innerHTML = this.routes[name](params);
-        void el.offsetWidth; // Force Reflow
-        el.classList.add('active');
-        
-        // Dock Management
-        const dock = document.getElementById('main-dock');
-        if(['home', 'search', 'profile'].includes(name)) dock.classList.remove('hidden');
-        else dock.classList.add('hidden');
-
-        // Update Tab State
-        document.querySelectorAll('.dock-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.target === name);
-        });
-    }
-    
-    back() {
-        if(this.history.length > 1) {
-            this.history.pop();
-            this.go(this.history[this.history.length - 1]);
-        } else {
-            this.go('home');
+        async getUsernameFromUID(uid) {
+            const p = await this.getUserProfile(uid);
+            return p ? p.username : "Unknown";
         }
-    }
-}
-
-/* * ----------------------------------------------------------------------------
- * MODULE 5: VIEW RENDERERS
- * ----------------------------------------------------------------------------
- */
-const Views = {
-    /**
-     * HOME VIEW
-     * Displays subjects/tables list.
-     */
-    Home: () => {
-        const data = Engine.cache;
-        const subjects = data.subjects || [];
         
-        return `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h1>My Tables</h1>
-                <div onclick="App.router.go('settings')" style="cursor:pointer; padding:10px; background:var(--c-surface); border-radius:50%; border:1px solid rgba(255,255,255,0.1)">
-                   ${ICONS.settings.replace('width="24"', 'width="20"')}
-                </div>
-            </div>
+        async searchUsers(query) {
+            // Simple client-side filtering for this demo scale
+            // In prod, use ElasticSearch or Cloud Functions
+            if(query.length < 3) return [];
             
-            ${Engine.mode === 'guest' ? 
-                `<div class="card" style="background:rgba(255, 193, 7, 0.15); border-color:rgba(255, 193, 7, 0.3);">
-                    <div style="display:flex; gap:10px; align-items:center; color:#ffd54f">
-                        <svg style="width:20px; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                        <b>Guest Mode</b>
-                    </div>
-                    <p style="margin-top:5px; font-size:14px; opacity:0.9">Your data won't save across devices so sign in or log in.</p>
-                </div>` : ''
-            }
-
-            <div class="list-anim">
-            ${subjects.length === 0 ? `
-                <div class="card" style="text-align:center; padding:40px; border-style:dashed; opacity:0.6">
-                    <h3>No Tables Yet</h3>
-                    <p>Create your first study table below.</p>
-                </div>` : subjects.map((sub, idx) => `
-                <div class="card interactive" onclick="App.router.go('detail', ${idx})">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span class="subtext">TABLE</span>
-                            <h2>${sub.name}</h2>
-                            <p>${(sub.tasks || []).length} Goals Pending</p>
-                        </div>
-                        <div style="width:40px; height:40px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center;">➜</div>
-                    </div>
-                    <div style="margin-top:15px; height:4px; background:rgba(0,0,0,0.3); border-radius:2px; overflow:hidden;">
-                        <div style="width:${Math.random() * 100}%; height:100%; background:var(--c-primary);"></div>
-                    </div>
-                </div>
-            `).join('')}
-            </div>
-            <button class="btn btn-primary" onclick="Modals.open('addSubject')">
-                <svg style="width:20px; fill:white" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                Create New Table
-            </button>
-        `;
-    },
-
-    /**
-     * DETAIL VIEW
-     * Displays tasks within a subject.
-     */
-    Detail: (idx) => {
-        const sub = Engine.cache.subjects[idx];
-        const tasks = sub.tasks || [];
-        return `
-            <div class="back-nav" onclick="App.router.back()">${ICONS.back} Back</div>
-            <span class="subtext">MANAGING</span>
-            <h1>${sub.name}</h1>
-            <div class="list-anim" style="margin-top:20px;">
-                ${tasks.length === 0 ? '<p style="text-align:center; margin:40px 0; opacity:0.5">No goals defined yet.</p>' : 
-                  tasks.map(t => `<div class="card" style="padding:16px;"><b>${t.desc}</b><div style="font-size:13px; color:var(--c-primary);">Due: ${t.date}</div></div>`).join('')
+            const snap = await this.db.ref('usernames').limitToFirst(50).once('value');
+            const results = [];
+            snap.forEach(child => {
+                if(child.key.toLowerCase().includes(query.toLowerCase())) {
+                    results.push({ username: child.key, uid: child.val() });
                 }
-            </div>
-            <button class="btn btn-primary" onclick="Modals.open('addTask', ${idx})">Add Goal</button>
-            <div style="height:100px;"></div>
-        `;
-    },
-
-    /**
-     * PROFILE VIEW
-     * Displays user stats and auth status.
-     */
-    Profile: () => {
-        const d = Engine.cache;
-        return `
-            <div class="profile-hero">
-                <div class="profile-banner" onclick="App.triggerUpload('bnr')"><img src="${d.bnr || CONFIG.assets.defBanner}"></div>
-                <div class="profile-avatar" onclick="App.triggerUpload('pfp')"><img src="${d.pfp || (CONFIG.assets.defPfp + (d.user||'G'))}"></div>
-            </div>
-            <div class="profile-meta">
-                <h1>${d.user || 'Guest User'}</h1>
-                <span class="subtext" style="color:var(--c-primary)">${Engine.mode === 'cloud' ? 'CLOUD SYNC ACTIVE' : 'LOCAL DEVICE STORAGE'}</span>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;">
-                    <div class="card" style="text-align:center; padding:15px;"><h1>${(d.subjects||[]).length}</h1><span class="subtext">TABLES</span></div>
-                    <div class="card" style="text-align:center; padding:15px;"><h1>${(d.family||[]).length}</h1><span class="subtext">FAMILY</span></div>
-                </div>
-                ${Engine.mode === 'guest' ? 
-                    `<div class="card" style="margin-top:20px;"><h3>Sync Data</h3><p>Sign in to save data to cloud.</p><button class="btn btn-primary" onclick="App.router.go('settings')">Sign In</button></div>` : 
-                    `<button class="btn btn-danger" onclick="Engine.logout()">Log Out</button>`
-                }
-            </div>
-        `;
-    },
-
-    /**
-     * SEARCH VIEW
-     * Allows cloud users to find others. Locked for guests.
-     */
-    Search: () => {
-        const isGuest = Engine.mode === 'guest';
-        return `
-            <h1>Search</h1>
-            <p>Find other users and view their public tables.</p>
-            <div class="inp-wrap" style="margin-top:20px;">
-                <input class="inp" placeholder="${isGuest ? 'Sign in to search' : 'Type username...'}" 
-                       oninput="App.handleSearch(this.value)" ${isGuest ? 'disabled' : ''}>
-            </div>
-            
-            <div id="search-results" class="list-anim">
-                ${isGuest ? 
-                    `<div style="text-align:center; padding:30px; opacity:0.5;">
-                        <svg style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H8.9V6zM18 20H6V10h12v10z" fill="white"/></svg>
-                        <br>Search Locked<br>Guest Mode
-                    </div>` : 
-                    `<div style="text-align:center; padding:30px; opacity:0.5;">Start typing...</div>`
-                }
-            </div>
-        `;
-    },
-
-    /**
-     * PUBLIC PROFILE VIEW
-     * View-only mode for other users.
-     */
-    PublicProfile: (data) => `
-        <div onclick="App.router.back()" style="position:fixed; top:20px; left:20px; z-index:50; background:rgba(0,0,0,0.6); padding:8px 16px; border-radius:20px; backdrop-filter:blur(10px); cursor:pointer; font-weight:600;">← Back</div>
-        <div class="profile-hero">
-            <div class="profile-banner"><img src="${data.bnr || CONFIG.assets.defBanner}"></div>
-            <div class="profile-avatar"><img src="${data.pfp || CONFIG.assets.defPfp + data.user}"></div>
-        </div>
-        <div class="profile-meta">
-            <h1>${data.user}</h1>
-            <span class="subtext">PUBLIC PROFILE</span>
-            
-            ${Engine.mode !== 'guest' ? 
-                `<button class="btn btn-primary" onclick="Chat.open('${data.user}')" style="margin-bottom:20px;">
-                    ${ICONS.chat} Message
-                </button>` : ''
-            }
-
-            <div class="list-anim" style="margin-top:20px;">
-                ${(data.subjects || []).map(s => `<div class="card"><h3>${s.name}</h3><p>${(s.tasks||[]).length} Goals</p></div>`).join('') || '<p>No public tables.</p>'}
-            </div>
-        </div>
-    `,
-    
-    /**
-     * SETTINGS VIEW
-     * Hub for family, account, and info.
-     */
-    Settings: () => {
-        return `
-            <div class="back-nav" onclick="App.router.go('home')">${ICONS.back} Back</div>
-            <h1>Settings</h1>
-            
-            <div class="card interactive" onclick="App.router.go('family')">
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <div style="color:var(--c-accent)">${ICONS.family}</div>
-                    <div><h3>Family Center</h3><p>Manage invites and chats</p></div>
-                </div>
-            </div>
-
-            ${Engine.mode === 'guest' ? `
-                <div class="card">
-                    <h3>Account Access</h3>
-                    <div class="inp-wrap"><input id="auth-u" class="inp" placeholder="Username"></div>
-                    <div class="inp-wrap"><input id="auth-p" class="inp" type="password" placeholder="Password"></div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" onclick="App.handleAuth('login')">Login</button>
-                        <button class="btn" onclick="App.handleAuth('signup')">Sign Up</button>
-                    </div>
-                </div>
-            ` : `
-                <div class="card">
-                    <h3>App Info</h3>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px; opacity:0.7;"><span>Version</span><span>6.0 Colossus</span></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px; opacity:0.7;"><span>User</span><span>${Engine.user}</span></div>
-                </div>
-            `}
-        `;
-    },
-
-    /**
-     * FAMILY VIEW
-     * Invite management and family list with chat options.
-     */
-    Family: () => {
-        const d = Engine.cache;
-        return `
-            <div class="back-nav" onclick="App.router.go('settings')">${ICONS.back} Back</div>
-            <h1>Family Center</h1>
-            
-            ${Engine.mode === 'guest' ? `<div class="card">Sign in to add family.</div>` : `
-                <div class="card">
-                    <h3>Send Invite</h3>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input id="fam-inp" class="inp" placeholder="Username">
-                        <button class="btn btn-primary" style="width:auto; margin:0;" onclick="App.handleInvite()">Send</button>
-                    </div>
-                </div>
-                ${(d.invites || []).map(inv => `
-                    <div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <b>${inv}</b>
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-primary" style="height:36px; margin:0;" onclick="App.replyInvite('${inv}', true)">✓</button>
-                                <button class="btn btn-danger" style="height:36px; margin:0;" onclick="App.replyInvite('${inv}', false)">✕</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-                <h3 style="margin-top:20px;">My Connections</h3>
-                <div class="list-anim">
-                    ${(d.family || []).length === 0 ? '<p style="opacity:0.5">No family members connected.</p>' : (d.family).map(f => `
-                        <div class="card">
-                            <div style="display:flex; align-items:center; justify-content:space-between;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <div style="width:10px; height:10px; background:var(--c-success); border-radius:50%;"></div>
-                                    <b>${f}</b>
-                                </div>
-                                <div style="display:flex; gap:8px;">
-                                    <button class="btn btn-sm" onclick="App.viewPublicUser('${f}')">Profile</button>
-                                    <button class="btn btn-primary btn-sm" onclick="Chat.open('${f}')">Chat</button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `}
-        `;
-    }
-};
-
-/* * ----------------------------------------------------------------------------
- * MODULE 6: MAIN APP CONTROLLER
- * ----------------------------------------------------------------------------
- */
-const Engine = new DataEngine();
-const Chat = new ChatManager();
-
-const App = {
-    router: new Router(),
-    uploadType: null,
-    
-    /**
-     * Initialization Sequence
-     */
-    init: () => {
-        // 1. Register Routes
-        App.router.register('home', Views.Home);
-        App.router.register('detail', Views.Detail);
-        App.router.register('profile', Views.Profile);
-        App.router.register('search', Views.Search);
-        App.router.register('public', Views.PublicProfile);
-        App.router.register('settings', Views.Settings);
-        App.router.register('family', Views.Family);
-
-        // 2. Build Dock
-        const dock = document.getElementById('main-dock');
-        dock.innerHTML = `
-            <div class="dock-btn" data-target="home" onclick="App.router.go('home')">${ICONS.home}</div>
-            <div class="dock-btn" data-target="search" onclick="App.router.go('search')">${ICONS.search}</div>
-            <div class="dock-btn" data-target="profile" onclick="App.router.go('profile')">${ICONS.profile}</div>
-        `;
-
-        // 3. Intro Animation Management
-        setTimeout(() => {
-            const intro = document.getElementById('intro-layer');
-            intro.style.opacity = '0';
-            setTimeout(() => { intro.style.display = 'none'; }, 800);
-        }, 2200);
-
-        // 4. Start App
-        App.render();
-        App.router.go('home');
-        
-        // 5. File Upload Listeners
-        document.getElementById('file-helper').addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    Engine.save(App.uploadType, evt.target.result);
-                    App.toast("Image Updated");
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
-    },
-
-    /**
-     * Core Render Loop
-     */
-    render: () => { 
-        if(App.router.current) App.router.go(App.router.current); 
-    },
-
-    /**
-     * Toast Notification System
-     */
-    toast: (msg) => {
-        const z = document.getElementById('toast-zone');
-        const el = document.createElement('div');
-        el.className = 'toast';
-        el.innerText = msg;
-        z.appendChild(el);
-        setTimeout(() => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(-20px)';
-            setTimeout(() => el.remove(), 300);
-        }, 3000);
-    },
-
-    /* --- AUTH HANDLERS --- */
-    
-    handleAuth: async (type) => {
-        const u = document.getElementById('auth-u').value;
-        const p = document.getElementById('auth-p').value;
-        if(!u || !p) return App.toast("Missing credentials");
-        try {
-            if(type === 'login') await Engine.login(u, p);
-            else await Engine.signup(u, p);
-            App.toast(`Welcome ${u}`);
-            App.router.go('home');
-        } catch(e) { App.toast(e.message); }
-    },
-    
-    /* --- SEARCH HANDLERS --- */
-
-    handleSearch: async (val) => {
-        if(!val) return;
-        const container = document.getElementById('search-results');
-        try {
-            const res = await Engine.searchUsers(val);
-            if(res.length === 0) {
-                container.innerHTML = `<p style="text-align:center; padding:20px;">No results found.</p>`;
-            } else {
-                container.innerHTML = res.map(u => `
-                    <div class="card interactive" onclick="App.viewPublicUser('${u.user}')">
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <img src="${u.pfp || CONFIG.assets.defPfp + u.user}" style="width:40px; height:40px; border-radius:12px; object-fit:cover;">
-                            <div><b>${u.user}</b><div class="subtext">${(u.subjects||[]).length} Tables</div></div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-        } catch(e) { console.error(e); }
-    },
-    
-    viewPublicUser: async (username) => {
-        const data = await Engine.getPublicProfile(username);
-        if(data) App.router.go('public', data);
-    },
-
-    /* --- PROFILE ACTIONS --- */
-
-    triggerUpload: (type) => {
-        if(Engine.mode === 'guest') return App.toast("Sign in to customize profile");
-        App.uploadType = type;
-        document.getElementById('file-helper').click();
-    },
-
-    /* --- INVITE HANDLERS --- */
-
-    handleInvite: async () => {
-        const target = document.getElementById('fam-inp').value;
-        try {
-            await Engine.sendInvite(target);
-            App.toast("Invite Sent");
-            document.getElementById('fam-inp').value = '';
-        } catch(e) { App.toast(e.message); }
-    },
-    
-    replyInvite: async (sender, accept) => {
-        const d = Engine.cache;
-        d.invites = d.invites.filter(i => i !== sender);
-        if(accept) {
-            d.family = d.family || [];
-            d.family.push(sender);
-            
-            // Client-side hack to update sender's list (in a real app, use Cloud Functions)
-            firebase.database().ref('users/'+sender+'/family').once('value', s => {
-                let f = s.val() || [];
-                if(!f.includes(Engine.user)) { f.push(Engine.user); s.ref.set(f); }
             });
+            return results;
         }
-        Engine.save('root', d);
-        App.render();
     }
-};
 
-/* * ----------------------------------------------------------------------------
- * MODULE 7: MODAL SYSTEM
- * ----------------------------------------------------------------------------
- */
-const Modals = {
-    open: (type, payload) => {
-        const m = document.getElementById('modal-base');
-        const t = document.getElementById('m-title');
-        const b = document.getElementById('m-body');
-        const btn = document.getElementById('m-btn-p');
+    /* INITIALIZE KERNEL */
+    const DB = new DataKernel();
+
+    /* ----------------------------------------------------------------------
+     * MODULE: UI UTILITIES (Toast, Modal, Loader)
+     * ---------------------------------------------------------------------- */
+    const UI = {
+        toast(msg, type='info') {
+            const el = document.createElement('div');
+            el.className = 'toast-message';
+            el.innerText = msg;
+            if(type === 'error') el.style.borderColor = 'var(--titan-danger)';
+            if(type === 'success') el.style.borderColor = 'var(--titan-success)';
+            
+            document.getElementById('toast-layer').appendChild(el);
+            
+            // Auto remove
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-20px)';
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        },
         
-        // Reset
-        btn.onclick = null;
-        m.classList.add('open');
-        
-        if(type === 'guestLock') {
-            t.innerText = "Restricted Access";
-            b.innerHTML = `<p>This feature requires a cloud account. Please sign in to continue.</p>`;
-            btn.innerText = "Go to Login";
-            btn.onclick = () => {
-                Modals.close();
-                App.router.go('settings');
-            };
-        } else if(type === 'addSubject') {
-            t.innerText = "New Table";
-            b.innerHTML = `<div class="inp-wrap"><label class="subtext">NAME</label><input id="m-inp-1" class="inp" placeholder="e.g. Physics"></div>`;
-            btn.onclick = () => {
-                const val = document.getElementById('m-inp-1').value;
-                if(val) {
-                    const subs = Engine.cache.subjects || [];
-                    subs.push({ name: val, tasks: [] });
-                    Engine.save('subjects', subs);
-                    Modals.close();
-                }
-            };
-        } else if (type === 'addTask') {
-            t.innerText = "New Goal";
-            b.innerHTML = `
-                <div class="inp-wrap"><label class="subtext">DESCRIPTION</label><input id="m-inp-1" class="inp" placeholder="Read Chapter 1"></div>
-                <div class="inp-wrap"><label class="subtext">DUE DATE</label><input id="m-inp-2" class="inp" type="date"></div>
-            `;
-            btn.onclick = () => {
-                const desc = document.getElementById('m-inp-1').value;
-                const date = document.getElementById('m-inp-2').value;
-                if(desc && date) {
-                    const subs = Engine.cache.subjects;
-                    subs[payload].tasks.push({ desc, date });
-                    Engine.save('subjects', subs);
-                    Modals.close();
-                    App.router.go('detail', payload);
-                }
-            };
+        modal: {
+            el: document.getElementById('modal-layer'),
+            title: document.getElementById('modal-title'),
+            content: document.getElementById('modal-content'),
+            btnYes: document.getElementById('modal-confirm'),
+            btnNo: document.getElementById('modal-cancel'),
+            
+            open(title, html, onConfirm) {
+                this.title.innerText = title;
+                this.content.innerHTML = html;
+                this.el.classList.add('open');
+                
+                // Reset Buttons
+                this.btnYes.disabled = false;
+                this.btnYes.innerText = 'Confirm';
+                
+                // Handlers
+                this.btnNo.onclick = () => this.close();
+                this.btnYes.onclick = async () => {
+                    this.btnYes.disabled = true;
+                    this.btnYes.innerHTML = '<div class="spin-loader"></div>';
+                    
+                    try {
+                        await onConfirm();
+                        this.close();
+                    } catch(e) {
+                        UI.toast(e.message || e, 'error');
+                        this.btnYes.disabled = false;
+                        this.btnYes.innerText = 'Try Again';
+                    }
+                };
+            },
+            
+            close() {
+                this.el.classList.remove('open');
+            }
+        },
+
+        loader() {
+            return `<div style="display:flex; justify-content:center; padding:20px;"><div class="spin-loader"></div></div>`;
         }
+    };
+    /* ----------------------------------------------------------------------
+     * MODULE: ROUTER & NAVIGATION SYSTEM
+     * ---------------------------------------------------------------------- */
+    const Router = {
+        current: null,
+        routes: {},
         
-        document.getElementById('m-btn-s').onclick = Modals.close;
-    },
-    close: () => document.getElementById('modal-base').classList.remove('open')
-};
+        init() {
+            // Define Routes
+            this.routes = {
+                'home': Views.home,
+                'family': Views.family,
+                'profile': Views.profile,
+                'detail': Views.detail
+            };
+            
+            // Handle Back Button
+            window.onpopstate = (e) => {
+                if(e.state) this.navigate(e.state.view, e.state.params, false);
+            };
+        },
 
-// Bootstrap
-window.onload = App.init;
+        async navigate(viewName, params = null, push = true) {
+            const viewport = document.getElementById('titan-viewport');
+            
+            // 1. Update State
+            if(push) history.pushState({ view: viewName, params }, '', `#${viewName}`);
+            this.current = viewName;
+            
+            // 2. Render View
+            UI.toast('Loading...', 'info'); // Micro-feedback
+            let html = '';
+            try {
+                html = await this.routes[viewName](params);
+                // Remove loading toast
+                const toast = document.querySelector('.toast-message');
+                if(toast) toast.remove();
+            } catch(e) {
+                console.error(e);
+                html = `<div class="card"><h3 style="color:red">Error</h3><p>${e.message}</p></div>`;
+            }
+
+            // 3. Transition
+            const oldPage = document.querySelector('.view-page.active');
+            const newPage = document.createElement('div');
+            newPage.className = 'view-page';
+            newPage.innerHTML = html;
+            viewport.appendChild(newPage);
+
+            // Force Reflow for Animation
+            void newPage.offsetWidth; 
+            newPage.classList.add('active');
+            
+            if(oldPage) {
+                oldPage.classList.remove('active');
+                setTimeout(() => oldPage.remove(), 500); // Cleanup after anim
+            }
+
+            // 4. Update Dock
+            this.updateDock(viewName);
+        },
+        
+        updateDock(view) {
+            const dockWrap = document.getElementById('nav-dock-wrapper');
+            const dock = document.getElementById('nav-dock');
+            
+            if(['detail'].includes(view)) {
+                dockWrap.style.display = 'none';
+            } else {
+                dockWrap.style.display = 'block';
+                // Render Dock Icons
+                dock.innerHTML = `
+                    <div class="dock-item ${view==='home'?'active':''}" onclick="Router.navigate('home')">
+                        ${ICONS.home}<div class="dock-indicator"></div>
+                    </div>
+                    <div class="dock-item ${view==='family'?'active':''}" onclick="Router.navigate('family')">
+                        ${ICONS.users}<div class="dock-indicator"></div>
+                    </div>
+                    <div class="dock-item ${view==='profile'?'active':''}" onclick="Router.navigate('profile')">
+                        ${ICONS.user}<div class="dock-indicator"></div>
+                    </div>
+                `;
+            }
+        }
+    };
+
+    /* ----------------------------------------------------------------------
+     * MODULE: VIEW CONTROLLERS (The Screen Logic)
+     * ---------------------------------------------------------------------- */
+    const Views = {
+        
+        // --- HOME SCREEN ---
+        home: async () => {
+            const user = DB.user;
+            let html = `<h1 class="display-1 text-gradient">Dashboard</h1>`;
+            
+            if(!user) {
+                return html + `
+                    <div class="card card-glass" style="text-align:center; padding:40px;">
+                        <h2 class="heading-3">Welcome to Titan</h2>
+                        <p class="text-body" style="margin-bottom:20px">Sign in to sync your syllabus across devices.</p>
+                        <button class="btn btn-primary" onclick="Router.navigate('profile')">Get Started</button>
+                    </div>
+                `;
+            }
+
+            // Fetch Data
+            const snap = await DB.db.ref(`users/${user.uid}/subjects`).once('value');
+            const subjects = [];
+            snap.forEach(s => subjects.push({ id: s.key, ...s.val() }));
+
+            // Stats Chart Container
+            html += `
+                <div class="card">
+                    <span class="text-label">WEEKLY VELOCITY</span>
+                    <canvas id="home-chart" height="100" style="width:100%"></canvas>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 class="heading-3">My Tables</h3>
+                    <button class="btn btn-sm btn-primary" onclick="AppActions.addTable()">+ New</button>
+                </div>
+            `;
+
+            if(subjects.length === 0) {
+                html += `<div class="card card-glass" style="opacity:0.6; text-align:center;">No tables yet. Tap + New.</div>`;
+            } else {
+                subjects.forEach(sub => {
+                    const taskCount = sub.tasks ? Object.keys(sub.tasks).length : 0;
+                    html += `
+                        <div class="card card-interactive" onclick="Router.navigate('detail', '${sub.id}')">
+                            <div class="card-header" style="margin:0">
+                                <div>
+                                    <h2 class="heading-3">${sub.name}</h2>
+                                    <p class="text-small">${taskCount} Active Goals</p>
+                                </div>
+                                <div style="opacity:0.5">➜</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Deferred Chart Render
+            setTimeout(() => {
+                const ctx = document.getElementById('home-chart');
+                if(ctx) {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                            datasets: [{
+                                label: 'Tasks',
+                                data: [12, 19, 3, 5, 2],
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { x: { display: false }, y: { display: false } }
+                        }
+                    });
+                }
+            }, 100);
+
+            return html;
+        },
+
+        // --- DETAIL SCREEN ---
+        detail: async (id) => {
+            const user = DB.user;
+            if(!user) return Router.navigate('home');
+
+            const snap = await DB.db.ref(`users/${user.uid}/subjects/${id}`).once('value');
+            if(!snap.exists()) return Router.navigate('home');
+            
+            const data = snap.val();
+            const tasks = [];
+            if(data.tasks) {
+                Object.keys(data.tasks).forEach(k => tasks.push({ id: k, ...data.tasks[k] }));
+            }
+
+            return `
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <button class="btn btn-sm btn-ghost" onclick="Router.navigate('home')">← Back</button>
+                    <button class="btn btn-sm btn-primary" onclick="Whiteboard.open('${id}')">Canvas</button>
+                </div>
+                
+                <h1 class="display-2">${data.name}</h1>
+                <div style="height:1px; background:var(--border-subtle); margin-bottom:20px;"></div>
+
+                <div id="task-list-container">
+                    ${tasks.length === 0 ? '<p class="text-secondary">No tasks defined.</p>' : 
+                      tasks.map(t => `
+                        <div class="card" style="padding:12px 16px; display:flex; align-items:center; gap:12px;">
+                            <div onclick="AppActions.toggleTask('${id}', '${t.id}', ${!t.done})" 
+                                 style="width:24px; height:24px; border-radius:6px; border:2px solid ${t.done?'var(--titan-success)':'#555'}; background:${t.done?'var(--titan-success)':'transparent'}; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                 ${t.done ? '<svg style="width:16px; fill:black" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+                            </div>
+                            <span style="flex:1; text-decoration:${t.done?'line-through':''}; color:${t.done?'#555':'white'}">${t.desc}</span>
+                            <button class="btn btn-icon btn-ghost" style="width:30px; height:30px;" onclick="AppActions.deleteTask('${id}', '${t.id}')">
+                                <svg style="width:16px; fill:#555" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            </button>
+                        </div>
+                      `).join('')
+                    }
+                </div>
+
+                <button class="btn btn-primary" style="margin-top:20px" onclick="AppActions.addTask('${id}')">+ Add Task</button>
+                <button class="btn btn-danger" style="margin-top:10px" onclick="AppActions.deleteTable('${id}')">Delete Table</button>
+            `;
+        },
+
+        // --- FAMILY SCREEN ---
+        family: async () => {
+            const user = DB.user;
+            if(!user) return `<div class="card card-glass" style="text-align:center; padding:40px;"><h3>Access Denied</h3><p>Login required.</p></div>`;
+
+            // Parallel Data Fetching
+            const [friendsSnap, invitesSnap] = await Promise.all([
+                DB.db.ref(`users/${user.uid}/friends`).once('value'),
+                DB.db.ref(`users/${user.uid}/invites`).once('value')
+            ]);
+
+            let html = `<h1 class="display-1 text-gradient">Family Hub</h1>`;
+
+            // Search Bar
+            html += `
+                <div class="card card-glass">
+                    <span class="text-label">CONNECT</span>
+                    <div class="form-group" style="display:flex; gap:10px; margin:0;">
+                        <input id="user-search" class="input-field" placeholder="Search Username...">
+                        <button class="btn btn-primary" style="width:auto" onclick="AppActions.searchUser()">Search</button>
+                    </div>
+                    <div id="search-results" class="search-results-container"></div>
+                </div>
+            `;
+
+            // Invites
+            if(invitesSnap.exists()) {
+                html += `<h3 class="heading-3" style="color:var(--titan-warning)">Pending Invites</h3>`;
+                invitesSnap.forEach(inv => {
+                    html += `
+                        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>${inv.val().fromName}</b>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-sm btn-success" onclick="AppActions.respondInvite('${inv.key}', '${inv.val().fromUid}', true)">Accept</button>
+                                <button class="btn btn-sm btn-danger" onclick="AppActions.respondInvite('${inv.key}', '${inv.val().fromUid}', false)">Decline</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Friends List
+            html += `<h3 class="heading-3" style="margin-top:20px;">Connections</h3>`;
+            if(!friendsSnap.exists()) {
+                html += `<p class="text-secondary">You haven't connected with anyone yet.</p>`;
+            } else {
+                friendsSnap.forEach(f => {
+                    html += `
+                        <div class="card card-interactive" onclick="ChatModule.open('${f.key}', '${f.val().username}')">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <div style="width:40px; height:40px; background:var(--titan-highlight); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                    ${f.val().username[0].toUpperCase()}
+                                </div>
+                                <div style="flex:1;">
+                                    <h4 style="margin:0;">${f.val().username}</h4>
+                                    <span class="text-small" style="color:var(--titan-success)">● Online</span>
+                                </div>
+                                <div style="width:30px; height:30px; border-radius:50%; background:rgba(59, 130, 246, 0.2); display:flex; align-items:center; justify-content:center;">
+                                    <svg viewBox="0 0 24 24" style="width:16px; fill:#3b82f6"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            return html;
+        },
+
+        // --- PROFILE SCREEN ---
+        profile: async () => {
+            const user = DB.user;
+            
+            if(user) {
+                // Logged In View
+                const profile = await DB.getUserProfile(user.uid);
+                return `
+                    <div style="text-align:center; padding:40px 0;">
+                        <div style="width:100px; height:100px; background:linear-gradient(135deg, #333, #111); border-radius:50%; border:2px solid var(--border-subtle); margin:0 auto 20px auto; display:flex; align-items:center; justify-content:center;">
+                            <span class="display-1">${profile.username[0].toUpperCase()}</span>
+                        </div>
+                        <h1 class="display-2">${profile.username}</h1>
+                        <p class="text-secondary">${user.email}</p>
+                        <div style="margin-top:30px;">
+                            <button class="btn btn-danger" onclick="AppActions.logout()">Sign Out</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Auth Form View
+                return `
+                    <h1 class="display-1 text-gradient" style="text-align:center; margin-bottom:40px; margin-top:20px;">Syllabus Titan</h1>
+                    <div class="card card-glass">
+                        <div class="form-group">
+                            <span class="text-label">EMAIL</span>
+                            <input id="auth-email" type="email" class="input-field" placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <span class="text-label">PASSWORD</span>
+                            <input id="auth-pass" type="password" class="input-field" placeholder="••••••••">
+                        </div>
+                        <div class="form-group" id="user-field" style="display:none;">
+                            <span class="text-label">USERNAME (FOR SIGN UP)</span>
+                            <input id="auth-user" type="text" class="input-field" placeholder="unique_name">
+                        </div>
+                        
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <button id="btn-login" class="btn btn-primary" onclick="AppActions.login()">Login</button>
+                            <button id="btn-reg" class="btn" onclick="AppActions.toggleRegister()">Create Account</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    };
+
+    /* ----------------------------------------------------------------------
+     * MODULE: FEATURE ENGINES
+     * ---------------------------------------------------------------------- */
+    
+    // 1. CHAT ENGINE
+    const ChatModule = {
+        activeTarget: null,
+        listener: null,
+
+        open(uid, username) {
+            this.activeTarget = uid;
+            document.getElementById('chat-title').innerText = username;
+            document.getElementById('chat-interface').classList.add('active');
+            
+            // Generate Chat ID (alphanumeric sort guarantees same ID for both users)
+            const myUid = DB.user.uid;
+            const chatId = [myUid, uid].sort().join('_');
+            
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML = '<div class="spin-loader" style="margin:20px auto"></div>';
+
+            // Realtime Listener
+            this.listener = DB.db.ref(`chats/${chatId}`).limitToLast(50);
+            this.listener.on('value', (snap) => {
+                feed.innerHTML = '';
+                if(!snap.exists()) {
+                    feed.innerHTML = '<div style="text-align:center; opacity:0.5; margin-top:40px;">No messages yet.<br>Say hello!</div>';
+                    return;
+                }
+                
+                const msgs = [];
+                snap.forEach(c => msgs.push(c.val()));
+                
+                msgs.forEach(m => {
+                    const el = document.createElement('div');
+                    el.className = `message-bubble ${m.sender === myUid ? 'sent' : 'received'}`;
+                    el.innerText = m.text;
+                    feed.appendChild(el);
+                });
+                
+                // Auto Scroll
+                feed.scrollTop = feed.scrollHeight;
+            });
+        },
+
+        send() {
+            const inp = document.getElementById('chat-input');
+            const txt = inp.value.trim();
+            if(!txt || !this.activeTarget) return;
+            
+            const myUid = DB.user.uid;
+            const chatId = [myUid, this.activeTarget].sort().join('_');
+            
+            DB.db.ref(`chats/${chatId}`).push({
+                sender: myUid,
+                text: txt,
+                ts: Date.now()
+            });
+            inp.value = '';
+        },
+
+        close() {
+            document.getElementById('chat-interface').classList.remove('active');
+            if(this.listener) this.listener.off(); // Detach listener to save memory
+            this.activeTarget = null;
+        }
+    };
+
+    // 2. WHITEBOARD ENGINE
+    const Whiteboard = {
+        canvas: document.getElementById('wb-canvas'),
+        ctx: null,
+        isDrawing: false,
+        activeSubject: null,
+        
+        init() {
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+            
+            // Events
+            const start = (e) => {
+                this.isDrawing = true;
+                this.ctx.beginPath();
+                this.draw(e);
+            };
+            const move = (e) => {
+                if(!this.isDrawing) return;
+                e.preventDefault(); // Stop scroll
+                this.draw(e);
+            };
+            const end = () => {
+                this.isDrawing = false;
+                this.ctx.beginPath();
+            };
+            
+            // Mouse
+            this.canvas.onmousedown = start;
+            this.canvas.onmousemove = move;
+            this.canvas.onmouseup = end;
+            
+            // Touch
+            this.canvas.ontouchstart = (e) => start(e.touches[0]);
+            this.canvas.ontouchmove = (e) => move(e.touches[0]);
+            this.canvas.ontouchend = end;
+        },
+        
+        resize() {
+            const rect = this.canvas.parentElement.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height - 80; // Subtract toolbar
+        },
+        
+        draw(e) {
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            this.ctx.lineWidth = 3;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineTo(x, y);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+        },
+        
+        open(subjectId) {
+            this.activeSubject = subjectId;
+            document.getElementById('wb-layer').style.display = 'flex';
+            this.init();
+            this.ctx.strokeStyle = '#ffffff';
+        },
+        
+        close() {
+            document.getElementById('wb-layer').style.display = 'none';
+        },
+        
+        setColor(c) { this.ctx.strokeStyle = c; },
+        wipe() { this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height); },
+        save() { UI.toast('Sketch Saved'); this.close(); }
+    };
+    /* ----------------------------------------------------------------------
+     * MODULE: APPLICATION LOGIC (THE GLUE)
+     * ---------------------------------------------------------------------- */
+    const AppActions = {
+        
+        // --- DATA MUTATIONS ---
+        addTable: () => {
+            UI.modal.open('Create New Table', 
+                `<div class="form-group"><span class="text-label">TABLE NAME</span><input id="modal-inp" class="input-field" placeholder="e.g. Physics 101"></div>`, 
+                async () => {
+                    const name = document.getElementById('modal-inp').value.trim();
+                    if(!name) throw "Name is required";
+                    
+                    await DB.db.ref(`users/${DB.user.uid}/subjects`).push({
+                        name: name,
+                        created: Date.now()
+                    });
+                    
+                    Router.navigate('home');
+                    UI.toast('Table Created', 'success');
+                }
+            );
+        },
+
+        deleteTable: (id) => {
+            UI.modal.open('Delete Table?', 
+                `<p class="text-body">This will permanently delete this table and all its tasks.</p>`, 
+                async () => {
+                    await DB.db.ref(`users/${DB.user.uid}/subjects/${id}`).remove();
+                    Router.navigate('home');
+                    UI.toast('Table Deleted');
+                }
+            );
+        },
+
+        addTask: (subId) => {
+            UI.modal.open('Add Goal', 
+                `<div class="form-group"><span class="text-label">GOAL DESCRIPTION</span><input id="modal-inp" class="input-field" placeholder="e.g. Finish Chapter 3"></div>`, 
+                async () => {
+                    const desc = document.getElementById('modal-inp').value.trim();
+                    if(!desc) throw "Description is required";
+                    
+                    await DB.db.ref(`users/${DB.user.uid}/subjects/${subId}/tasks`).push({
+                        desc: desc,
+                        done: false,
+                        created: Date.now()
+                    });
+                    
+                    Router.navigate('detail', subId);
+                }
+            );
+        },
+
+        toggleTask: async (subId, taskId, status) => {
+            // Optimistic UI update happens in View render, but we push to DB here
+            await DB.db.ref(`users/${DB.user.uid}/subjects/${subId}/tasks/${taskId}`).update({ done: status });
+            // Re-render handled by listener or manual refresh. 
+            // For v9 speed, we just re-render the view
+            Router.navigate('detail', subId, false); 
+        },
+        
+        deleteTask: async (subId, taskId) => {
+            await DB.db.ref(`users/${DB.user.uid}/subjects/${subId}/tasks/${taskId}`).remove();
+            Router.navigate('detail', subId, false);
+        },
+
+        // --- SOCIAL LOGIC ---
+        searchUser: async () => {
+            const query = document.getElementById('user-search').value.trim();
+            const resBox = document.getElementById('search-results');
+            
+            if(!query) return;
+            resBox.innerHTML = UI.loader();
+            
+            const results = await DB.searchUsers(query);
+            
+            if(results.length === 0) {
+                resBox.innerHTML = '<p class="text-small" style="padding:10px; text-align:center">No users found.</p>';
+                return;
+            }
+            
+            resBox.innerHTML = results.map(u => {
+                if(u.uid === DB.user.uid) return ''; // Don't show self
+                return `
+                <div class="search-item">
+                    <b>${u.username}</b>
+                    <button class="btn btn-sm btn-primary" onclick="AppActions.sendInvite('${u.uid}', '${u.username}')">Connect</button>
+                </div>`;
+            }).join('');
+        },
+
+        sendInvite: async (targetUid, targetName) => {
+            // Check if already friends
+            const check = await DB.db.ref(`users/${DB.user.uid}/friends/${targetUid}`).once('value');
+            if(check.exists()) return UI.toast('Already connected', 'info');
+            
+            // Send Invite
+            const myProfile = await DB.getUserProfile(DB.user.uid);
+            await DB.db.ref(`users/${targetUid}/invites/${DB.user.uid}`).set({
+                fromUid: DB.user.uid,
+                fromName: myProfile.username,
+                ts: Date.now()
+            });
+            
+            UI.toast(`Invite sent to ${targetName}`, 'success');
+            document.getElementById('search-results').innerHTML = '';
+        },
+
+        respondInvite: async (inviteId, fromUid, accept) => {
+            const myUid = DB.user.uid;
+            
+            // 1. Remove Invite
+            const updates = {};
+            updates[`users/${myUid}/invites/${inviteId}`] = null;
+            
+            if(accept) {
+                // 2. Add Friendship (Bidirectional)
+                const fromProfile = await DB.getUserProfile(fromUid);
+                const myProfile = await DB.getUserProfile(myUid);
+                
+                updates[`users/${myUid}/friends/${fromUid}`] = { username: fromProfile.username };
+                updates[`users/${fromUid}/friends/${myUid}`] = { username: myProfile.username };
+                
+                UI.toast('Connection Established', 'success');
+            } else {
+                UI.toast('Invite Declined');
+            }
+            
+            await DB.db.ref().update(updates);
+            Router.navigate('family', null, false);
+        },
+
+        // --- AUTH LOGIC ---
+        toggleRegister: () => {
+            const userField = document.getElementById('user-field');
+            const btnReg = document.getElementById('btn-reg');
+            const btnLog = document.getElementById('btn-login');
+            
+            if(userField.style.display === 'none') {
+                userField.style.display = 'block';
+                btnLog.innerText = 'Register';
+                btnLog.onclick = AppActions.register; // Switch handler
+                btnReg.innerText = 'Back to Login';
+            } else {
+                userField.style.display = 'none';
+                btnLog.innerText = 'Login';
+                btnLog.onclick = AppActions.login;
+                btnReg.innerText = 'Create Account';
+            }
+        },
+
+        login: async () => {
+            const e = document.getElementById('auth-email').value;
+            const p = document.getElementById('auth-pass').value;
+            if(!e || !p) return UI.toast('Missing credentials', 'error');
+            
+            UI.toast('Authenticating...', 'info');
+            const res = await DB.signIn(e, p);
+            if(!res.success) UI.toast(res.error, 'error');
+            // Auth State Listener will handle redirect
+        },
+
+        register: async () => {
+            const e = document.getElementById('auth-email').value;
+            const p = document.getElementById('auth-pass').value;
+            const u = document.getElementById('auth-user').value;
+            if(!e || !p || !u) return UI.toast('All fields required', 'error');
+            
+            UI.toast('Creating Account...', 'info');
+            const res = await DB.signUp(e, p, u);
+            if(!res.success) UI.toast(res.error, 'error');
+        },
+
+        logout: async () => {
+            await DB.signOut();
+            UI.toast('Logged Out');
+        }
+    };
+
+    /* ----------------------------------------------------------------------
+     * SYSTEM BOOTLOADER
+     * ---------------------------------------------------------------------- */
+    (function Boot() {
+        console.log(">> SYSTEM BOOT INITIATED");
+        
+        // 1. Initialize Router
+        Router.init();
+        
+        // 2. Auth Listener (The Heartbeat)
+        DB.auth.onAuthStateChanged((user) => {
+            console.log(">> AUTH STATE:", user ? "LOGGED IN" : "GUEST");
+            
+            if(user) {
+                // If on auth page, go home. If elsewhere, stay there.
+                if(!Router.current || Router.current === 'profile') {
+                    Router.navigate('home');
+                } else {
+                    // Refresh current view to ensure data loads
+                    Router.navigate(Router.current, null, false);
+                }
+            } else {
+                // If logged out, force profile (login screen)
+                Router.navigate('profile');
+            }
+        });
+
+    })();
 
 </script>
 </body>
 </html>
+
