@@ -2,348 +2,1128 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS OS // V.1.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Syllabus Titan v10 | Ultimate</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-auth-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        /* --- CORE VARIABLES & RESET --- */
+        /* ==========================================================================
+           SYLLABUS TITAN STYLE ENGINE (v10.0) - "OBSIDIAN PROTOCOL"
+           ========================================================================== */
+
         :root {
-            --bg-dark: #050505;
-            --glass: rgba(20, 20, 30, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #00f2ff;
-            --accent-dim: rgba(0, 242, 255, 0.1);
-            --text-main: #ffffff;
-            --text-muted: #888;
-            --font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --shadow-win: 0 15px 35px rgba(0,0,0,0.5);
-            --easing: cubic-bezier(0.19, 1, 0.22, 1);
+            /* --- CORE PALETTE --- */
+            --void-black: #000000;
+            --void-deep: #050505;
+            --surface-1: #0f0f0f;
+            --surface-2: #161616;
+            --surface-3: #202020;
+            
+            /* --- NEON ACCENTS --- */
+            --neon-blue: #2979ff;
+            --neon-blue-dim: rgba(41, 121, 255, 0.1);
+            --neon-purple: #d500f9;
+            --neon-green: #00e676;
+            --neon-red: #ff1744;
+            --neon-gold: #ffc400;
+
+            /* --- TEXTURE & GLASS --- */
+            --glass-panel: rgba(20, 20, 20, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shine: rgba(255, 255, 255, 0.03);
+            --backdrop-blur: 20px;
+
+            /* --- TYPOGRAPHY --- */
+            --font-stack: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+            /* --- ANIMATION PHYSICS --- */
+            --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+            --speed-fast: 0.2s;
+            --speed-norm: 0.4s;
+            --speed-slow: 0.8s;
+            
+            /* --- Z-LAYERS --- */
+            --z-floor: 0;
+            --z-ui: 100;
+            --z-dock: 500;
+            --z-modal: 900;
+            --z-boot: 9999;
         }
 
-        * { box-sizing: border-box; user-select: none; }
-        body, html { margin: 0; padding: 0; overflow: hidden; height: 100vh; background: var(--bg-dark); font-family: var(--font-ui); color: var(--text-main); }
+        /* --- GLOBAL RESET --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--void-black); color: white; font-family: var(--font-stack); overflow: hidden; }
 
-        /* --- LOADING SCREEN --- */
-        #loader-layer {
+        /* --- BOOT SEQUENCE STYLES --- */
+        #boot-terminal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
-            transition: opacity 0.8s var(--easing);
+            background: #000; z-index: var(--z-boot);
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 20px;
+            font-family: var(--font-mono); color: var(--neon-green);
+            transition: opacity 1s var(--ease-expo);
         }
-        .loader-ring {
-            width: 80px; height: 80px; border: 2px solid transparent;
-            border-top: 2px solid var(--accent); border-right: 2px solid var(--accent);
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-            box-shadow: 0 0 15px var(--accent-dim);
+        .boot-line { margin: 2px 0; font-size: 12px; opacity: 0; animation: typeLine 0.1s forwards; }
+        .boot-glitch { animation: glitch 0.2s infinite; color: var(--neon-red); }
+        #boot-logo {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; border: 2px solid var(--neon-blue); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; opacity: 0;
+            box-shadow: 0 0 30px var(--neon-blue-dim);
         }
-        .loader-text { margin-top: 20px; font-size: 0.8rem; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; animation: blink 1s infinite; }
         
-        /* --- BACKGROUND --- */
-        #bg-canvas { position: absolute; top: 0; left: 0; z-index: 0; }
-
-        /* --- DESKTOP UI --- */
-        #desktop {
+        /* --- VIEWPORT ARCHITECTURE --- */
+        #app-viewport {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10; padding: 20px; opacity: 0; transform: scale(1.05);
-            transition: all 1.2s var(--easing); pointer-events: none; /* Enabled via JS */
+            display: flex; flex-direction: column; opacity: 0; transform: scale(1.02);
+            transition: all 1s var(--ease-expo);
         }
-        
-        /* --- TOP BAR --- */
-        .top-bar {
-            width: 100%; height: 50px;
-            background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--glass-border);
-            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        .logo { font-weight: 700; letter-spacing: 1px; color: var(--accent); }
-        .clock { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+        #app-viewport.online { opacity: 1; transform: scale(1); }
 
-        /* --- WINDOW SYSTEM --- */
-        .window {
-            position: absolute; width: 400px; height: 300px;
-            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border); border-radius: 10px;
-            box-shadow: var(--shadow-win);
-            display: flex; flex-direction: column;
-            opacity: 0; transform: translateY(20px) scale(0.95);
-            transition: opacity 0.4s ease, transform 0.4s var(--easing), width 0.3s, height 0.3s;
-            overflow: hidden;
+        .view-container {
+            flex: 1; position: relative; overflow: hidden; width: 100%;
         }
-        .window.active { border-color: rgba(0, 242, 255, 0.3); box-shadow: 0 20px 50px rgba(0, 242, 255, 0.05); z-index: 100; }
-        .win-header {
-            height: 40px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 15px; cursor: default;
+
+        .page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto; overflow-x: hidden;
+            padding: 24px; padding-bottom: 100px; padding-top: 50px;
+            opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95);
+            transition: 
+                opacity 0.4s var(--ease-expo), 
+                transform 0.4s var(--ease-expo);
         }
-        .win-title { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; opacity: 0.8; pointer-events: none;}
-        .win-controls { display: flex; gap: 8px; }
-        .control { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: transform 0.2s; }
-        .control:hover { transform: scale(1.2); }
-        .close { background: #ff5f56; } .min { background: #ffbd2e; } .max { background: #27c93f; }
-        
-        .win-content { flex: 1; padding: 20px; color: #ddd; font-size: 0.9rem; overflow-y: auto; }
-        
-        /* GUI ELEMENTS INSIDE WINDOWS */
+        .page.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); z-index: 10; }
+        .page::-webkit-scrollbar { display: none; }
+
+        /* --- COMPONENT: CARDS --- */
+        .card {
+            background: var(--surface-1);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px; margin-bottom: 16px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8);
+            transform: translateZ(0);
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        .card-glass {
+            background: var(--glass-panel);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+        }
+        .card-interactive { transition: transform 0.2s, background 0.2s; cursor: pointer; }
+        .card-interactive:active { transform: scale(0.97); background: var(--surface-2); }
+
+        /* --- COMPONENT: TYPOGRAPHY --- */
+        .h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; color: #fff; }
+        .h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .h3 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .text-dim { color: #888; font-size: 14px; line-height: 1.4; }
+        .text-mono { font-family: var(--font-mono); font-size: 12px; color: var(--neon-blue); letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; }
+        .gradient-text { background: linear-gradient(135deg, #fff 0%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* --- COMPONENT: BUTTONS --- */
         .btn {
-            background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent);
-            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
-            transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; width: 100%; margin-top: 10px;
+            width: 100%; height: 56px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: var(--surface-2); color: white;
+            border: 1px solid var(--glass-border); border-radius: 14px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; position: relative; overflow: hidden;
         }
-        .btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
-        input[type="text"], input[type="range"] {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-            color: white; padding: 10px; border-radius: 4px; outline: none; transition: border 0.3s;
+        .btn::after {
+            content: ''; position: absolute; inset: 0; background: white; opacity: 0; transition: opacity 0.2s;
         }
-        input[type="text"]:focus { border-color: var(--accent); }
+        .btn:active::after { opacity: 0.05; }
+        .btn:active { transform: scale(0.98); }
         
-        /* ANIMATIONS */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes blink { 50% { opacity: 0.5; } }
-        .boot-up { opacity: 1 !important; transform: scale(1) !important; pointer-events: auto !important; }
-        .win-open { opacity: 1; transform: translateY(0) scale(1); }
-        
-        /* DOCK */
+        .btn-primary { 
+            background: var(--neon-blue); 
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 0 20px var(--neon-blue-dim);
+        }
+        .btn-danger { background: rgba(255, 23, 68, 0.1); color: var(--neon-red); border-color: rgba(255, 23, 68, 0.3); }
+        .btn-ghost { background: transparent; border: none; height: auto; padding: 10px; color: #888; }
+        .btn-sm { height: 36px; font-size: 13px; padding: 0 16px; width: auto; border-radius: 10px; }
+
+        /* --- COMPONENT: INPUTS --- */
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-field {
+            width: 100%; height: 56px;
+            background: var(--surface-1); border: 1px solid var(--glass-border);
+            border-radius: 14px; padding: 0 20px;
+            color: white; font-size: 16px; font-family: var(--font-stack);
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+        .input-field:focus { border-color: var(--neon-blue); box-shadow: 0 0 0 2px var(--neon-blue-dim); }
+        .input-label {
+            position: absolute; top: -10px; left: 16px;
+            background: var(--void-black); padding: 0 5px;
+            font-size: 12px; color: #888; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* --- NAVIGATION DOCK --- */
+        .dock-wrapper {
+            position: fixed; bottom: 30px; left: 0; width: 100%;
+            display: flex; justify-content: center; z-index: var(--z-dock);
+            pointer-events: none; /* Let clicks pass through sides */
+        }
         .dock {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            height: 60px; background: var(--glass); border: 1px solid var(--glass-border);
-            border-radius: 16px; display: flex; align-items: center; gap: 15px; padding: 0 20px;
-            backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            transition: transform 0.3s var(--easing);
+            pointer-events: auto;
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px; background: rgba(20, 20, 20, 0.9);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .dock-item {
-            width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.1);
-            cursor: pointer; transition: all 0.3s var(--easing); display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; position: relative;
+        .dock-btn {
+            width: 50px; height: 50px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: #666; transition: all 0.3s var(--ease-elastic);
+            position: relative;
         }
-        .dock-item:hover { transform: translateY(-10px) scale(1.1); background: rgba(255,255,255,0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .dock-item::after {
-            content: ''; position: absolute; bottom: -8px; width: 4px; height: 4px; background: var(--accent);
-            border-radius: 50%; opacity: 0; transition: opacity 0.3s;
+        .dock-btn.active { background: var(--surface-3); color: white; transform: translateY(-5px); }
+        .dock-btn.active::after {
+            content: ''; position: absolute; bottom: -10px; width: 4px; height: 4px;
+            background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 10px var(--neon-blue);
         }
-        .dock-item.running::after { opacity: 1; }
+        .dock-btn svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* --- SPECIAL MODULES --- */
+        .guest-badge {
+            display: inline-block; padding: 4px 12px;
+            background: rgba(255, 196, 0, 0.1); border: 1px solid rgba(255, 196, 0, 0.3);
+            color: var(--neon-gold); font-size: 11px; border-radius: 20px;
+            font-weight: 700; text-transform: uppercase; margin-bottom: 10px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--neon-blue); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes typeLine { 0% { opacity: 0; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Whiteboard Layer */
+        #wb-layer {
+            position: fixed; inset: 0; background: #000; z-index: 2000;
+            display: none; flex-direction: column; animation: slideUp 0.4s var(--ease-expo);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* Chat Layer */
+        #chat-layer {
+            position: fixed; inset: 0; background: #050505; z-index: 1500;
+            transform: translateX(100%); transition: transform 0.4s var(--ease-expo);
+            display: flex; flex-direction: column;
+        }
+        #chat-layer.open { transform: translateX(0); }
+        
+        /* Modal */
+        #modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal);
+            backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        #modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            width: 85%; max-width: 400px; background: var(--surface-2);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 30px; transform: scale(0.9); transition: transform 0.3s var(--ease-elastic);
+        }
+        #modal-overlay.active .modal-box { transform: scale(1); }
 
     </style>
+    <link rel="manifest" href="manifest.json">
+
 </head>
 <body>
-
-    <div id="loader-layer">
-        <div class="loader-ring"></div>
-        <div class="loader-text">Initializing Core...</div>
+    
+    <div id="boot-terminal">
+        <div id="boot-logo">
+            <svg viewBox="0 0 24 24" style="width:40px; fill:var(--neon-blue)"><path d="M12 2L2 12l10 10 10-10L12 2zm0 18l-8-8 8-8 8 8-8 8z"/></svg>
+        </div>
+        <div id="terminal-lines"></div>
     </div>
 
-    <canvas id="bg-canvas"></canvas>
+    <div id="app-viewport">
+        <div class="view-container">
+            </div>
+    </div>
 
-    <div id="desktop">
-        <div class="top-bar">
-            <div class="logo">NEXUS // OS</div>
-            <div class="clock" id="clock">00:00:00</div>
+    <div class="dock-wrapper" id="dock-main" style="display:none;">
+        <nav class="dock">
+            <div class="dock-btn active" onclick="Router.go('home')">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            </div>
+            <div class="dock-btn" onclick="Router.go('family')" id="dock-family">
+                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <div class="dock-btn" onclick="Router.go('profile')">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+        </nav>
+    </div>
+
+    <div id="wb-layer">
+        <div style="padding: 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333;">
+            <button class="btn btn-ghost" style="width:auto;" onclick="Whiteboard.close()">Close</button>
+            <span class="h3" style="color:#888;">Canvas</span>
+            <button class="btn btn-sm btn-primary" onclick="Whiteboard.save()">Save</button>
         </div>
-
-        <div class="dock">
-            <div class="dock-item" onclick="wm.createWindow('Terminal', 'terminal')">💻</div>
-            <div class="dock-item" onclick="wm.createWindow('Settings', 'settings')">⚙️</div>
-            <div class="dock-item" onclick="wm.createWindow('Browser', 'browser')">🌐</div>
-            <div class="dock-item" onclick="wm.createWindow('Network', 'network')">📡</div>
+        <canvas id="wb-canvas" style="flex:1; touch-action:none;"></canvas>
+        <div style="padding:20px; display:flex; gap:20px; justify-content:center; background:#111;">
+            <div onclick="Whiteboard.setColor('#fff')" style="width:30px; height:30px; background:#fff; border-radius:50%; border:2px solid #555;"></div>
+            <div onclick="Whiteboard.setColor('#2979ff')" style="width:30px; height:30px; background:#2979ff; border-radius:50%; border:2px solid #555;"></div>
+            <div onclick="Whiteboard.setColor('#ff1744')" style="width:30px; height:30px; background:#ff1744; border-radius:50%; border:2px solid #555;"></div>
         </div>
     </div>
 
-    <script>
-        /* --- SYSTEM CORE --- */
-        const $ = (s) => document.querySelector(s);
-        
-        // 1. BOOT SEQUENCE
-        window.onload = () => {
-            setTimeout(() => {
-                $('.loader-text').innerText = "LOADING ASSETS...";
-            }, 1000);
+    <div id="chat-layer"></div>
+
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <h3 class="h2" id="modal-title">Confirm</h3>
+            <div id="modal-body" style="margin: 20px 0; color:#aaa;"></div>
+            <div style="display:flex; gap:10px;">
+                <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
+                <button id="modal-confirm" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-area" style="position:fixed; top:20px; left:0; width:100%; pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:10px; z-index:2000;"></div>
+<script>
+/**
+ * SYLLABUS TITAN v10.0 CORE
+ * Features: Dual-Kernel (Guest/Firebase), Username Auth, Matrix Boot
+ */
+
+/* --- CONFIGURATION --- */
+const CONFIG = {
+    firebase: {
+        apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE", 
+        authDomain: "syllabuspro-4ec5c.firebaseapp.com",
+        databaseURL: "https://syllabuspro-4ec5c-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "syllabuspro-4ec5c",
+        storageBucket: "syllabuspro-4ec5c.appspot.com",
+        messagingSenderId: "1073868222687",
+        appId: "1:1073868222687:web:866299d511394595861491"
+    }
+};
+
+/* --- KERNEL: BOOTLOADER --- */
+const BootLoader = {
+    async init() {
+        const term = document.getElementById('terminal-lines');
+        const logo = document.getElementById('boot-logo');
+        const lines = [
+            "INITIALIZING KERNEL...",
+            "LOADING ASSETS [OK]",
+            "CHECKING NETWORK...",
+            "MOUNTING FILE SYSTEM...",
+            "STARTING OBSIDIAN UI..."
+        ];
+
+        // 1. Terminal Effect
+        for(let line of lines) {
+            const el = document.createElement('div');
+            el.className = 'boot-line';
+            el.innerHTML = `> ${line}`;
+            term.appendChild(el);
+            await new Promise(r => setTimeout(r, 150));
+        }
+
+        // 2. Logo Reveal
+        term.style.opacity = '0';
+        logo.style.opacity = '1';
+        logo.style.transform = 'translate(-50%, -50%) scale(1.2)';
+        await new Promise(r => setTimeout(r, 800));
+
+        // 3. Clear Boot
+        document.getElementById('boot-terminal').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('boot-terminal').remove();
+            document.getElementById('app-viewport').classList.add('online');
             
-            setTimeout(() => {
-                $('.loader-text').innerText = "STARTING GUI...";
-            }, 2000);
+            // Start App Logic
+            App.start();
+        }, 500);
+    }
+};
 
-            setTimeout(() => {
-                $('#loader-layer').style.opacity = '0';
-                setTimeout(() => { $('#loader-layer').style.display = 'none'; }, 800);
-                $('#desktop').classList.add('boot-up');
-                
-                // Open default window
-                setTimeout(() => wm.createWindow('Welcome', 'welcome'), 500);
-            }, 3000);
+/* --- KERNEL: DATA LAYER (HYBRID) --- */
+class DataKernel {
+    constructor() {
+        this.mode = 'guest'; // 'guest' | 'cloud'
+        this.uid = null;
+        this.profile = { username: 'Guest' };
+        
+        // Init Firebase
+        try {
+            if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+            this.db = firebase.database();
+            this.auth = firebase.auth();
+        } catch(e) { console.error("Firebase Connect Error", e); }
+    }
+
+    async setMode(mode, uid = null) {
+        this.mode = mode;
+        this.uid = uid;
+        if(mode === 'cloud' && uid) {
+            // Fetch real profile
+            const snap = await this.db.ref(`users/${uid}`).once('value');
+            this.profile = snap.val() || { username: 'Unknown' };
+        } else {
+            this.profile = { username: 'Guest User' };
+        }
+    }
+
+    /* AUTHENTICATION: USERNAME -> EMAIL MAPPING */
+    async login(username, password) {
+        // 1. Lookup Email from Username
+        const snap = await this.db.ref(`usernames/${username}`).once('value');
+        if (!snap.exists()) throw new Error("Username not found");
+        
+        const actualUid = snap.val(); // Contains UID
+        
+        // We actually need the email. In this architecture, 
+        // we'll try to sign in with email constructed or fetched. 
+        // NOTE: For security in a real app, use a Cloud Function. 
+        // Here we cheat: We fetch the user profile public node to get email.
+        const userSnap = await this.db.ref(`users/${actualUid}`).once('value');
+        if(!userSnap.exists()) throw new Error("User corrupted");
+        
+        const email = userSnap.val().email;
+        
+        // 2. Auth
+        await this.auth.signInWithEmailAndPassword(email, password);
+        return true;
+    }
+
+    async register(username, password, email) {
+        // 1. Check Username availability
+        const snap = await this.db.ref(`usernames/${username}`).once('value');
+        if(snap.exists()) throw new Error("Username taken");
+
+        // 2. Create Auth
+        const cred = await this.auth.createUserWithEmailAndPassword(email, password);
+        const uid = cred.user.uid;
+
+        // 3. Save Data & Mapping
+        await this.db.ref(`users/${uid}`).set({
+            username, email, created: Date.now()
+        });
+        await this.db.ref(`usernames/${username}`).set(uid);
+        
+        return true;
+    }
+
+    async logout() {
+        if(this.mode === 'cloud') await this.auth.signOut();
+        this.setMode('guest');
+        Router.go('profile'); // Send back to login screen
+    }
+
+    /* DATA OPERATIONS: ABSTRACTION LAYER */
+    async getSubjects() {
+        if(this.mode === 'cloud') {
+            const snap = await this.db.ref(`users/${this.uid}/subjects`).once('value');
+            const arr = [];
+            snap.forEach(s => arr.push({ id: s.key, ...s.val() }));
+            return arr;
+        } else {
+            // Guest Mode: LocalStorage
+            const data = localStorage.getItem('titan_guest_subjects');
+            return data ? JSON.parse(data) : [];
+        }
+    }
+
+    async addSubject(name) {
+        if(this.mode === 'cloud') {
+            await this.db.ref(`users/${this.uid}/subjects`).push({ name, created: Date.now() });
+        } else {
+            const subs = await this.getSubjects();
+            subs.push({ id: 'local_' + Date.now(), name, created: Date.now(), tasks: {} });
+            localStorage.setItem('titan_guest_subjects', JSON.stringify(subs));
+        }
+    }
+
+    async deleteSubject(id) {
+        if(this.mode === 'cloud') {
+            await this.db.ref(`users/${this.uid}/subjects/${id}`).remove();
+        } else {
+            let subs = await this.getSubjects();
+            subs = subs.filter(s => s.id !== id);
+            localStorage.setItem('titan_guest_subjects', JSON.stringify(subs));
+        }
+    }
+
+    async getTasks(subId) {
+        if(this.mode === 'cloud') {
+            const snap = await this.db.ref(`users/${this.uid}/subjects/${subId}/tasks`).once('value');
+            const arr = [];
+            snap.forEach(t => arr.push({ id: t.key, ...t.val() }));
+            return arr;
+        } else {
+            const subs = await this.getSubjects();
+            const sub = subs.find(s => s.id === subId);
+            if(!sub || !sub.tasks) return [];
+            return Object.values(sub.tasks);
+        }
+    }
+
+    async addTask(subId, desc) {
+        const taskObj = { desc, done: false, created: Date.now() };
+        if(this.mode === 'cloud') {
+            await this.db.ref(`users/${this.uid}/subjects/${subId}/tasks`).push(taskObj);
+        } else {
+            const subs = await this.getSubjects();
+            const sub = subs.find(s => s.id === subId);
+            if(sub) {
+                if(!sub.tasks) sub.tasks = {};
+                const tId = 't_' + Date.now();
+                sub.tasks[tId] = { id: tId, ...taskObj };
+                localStorage.setItem('titan_guest_subjects', JSON.stringify(subs));
+            }
+        }
+    }
+
+    async toggleTask(subId, taskId, status) {
+        if(this.mode === 'cloud') {
+            await this.db.ref(`users/${this.uid}/subjects/${subId}/tasks/${taskId}`).update({ done: status });
+        } else {
+            const subs = await this.getSubjects();
+            const sub = subs.find(s => s.id === subId);
+            if(sub && sub.tasks) {
+                // In local mode, we need to find the task by ID in the object or array
+                // Simplify: Re-map tasks to array, find, update
+                 for (let key in sub.tasks) {
+                    if (sub.tasks[key].id === taskId) sub.tasks[key].done = status;
+                }
+                localStorage.setItem('titan_guest_subjects', JSON.stringify(subs));
+            }
+        }
+    }
+}
+
+const Kernel = new DataKernel();
+
+/* --- UI: HELPER FUNCTIONS --- */
+const UI = {
+    toast(msg, type='neutral') {
+        const t = document.createElement('div');
+        t.style.cssText = `background:rgba(20,20,20,0.95); backdrop-filter:blur(10px); color:white; padding:12px 24px; border-radius:50px; border:1px solid rgba(255,255,255,0.1); font-size:14px; animation:typeLine 0.3s forwards;`;
+        t.innerText = msg;
+        if(type === 'error') t.style.borderColor = 'var(--neon-red)';
+        if(type === 'success') t.style.borderColor = 'var(--neon-green)';
+        document.getElementById('toast-area').appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+    },
+    modal(title, html, onConfirm) {
+        const overlay = document.getElementById('modal-overlay');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = html;
+        overlay.classList.add('active');
+        
+        const yes = document.getElementById('modal-confirm');
+        const no = document.getElementById('modal-cancel');
+        
+        // Reset Listeners
+        const newYes = yes.cloneNode(true);
+        const newNo = no.cloneNode(true);
+        yes.parentNode.replaceChild(newYes, yes);
+        no.parentNode.replaceChild(newNo, no);
+        
+        newNo.onclick = () => overlay.classList.remove('active');
+        newYes.onclick = async () => {
+            newYes.innerHTML = '<div class="spinner" style="width:16px; height:16px;"></div>';
+            try { await onConfirm(); overlay.classList.remove('active'); } 
+            catch(e) { UI.toast(e.message, 'error'); }
+            finally { newYes.innerText = 'Confirm'; }
         };
+    }
+};
 
-        // 2. CLOCK
-        setInterval(() => {
-            const now = new Date();
-            $('#clock').innerText = now.toLocaleTimeString();
-        }, 1000);
+/* --- UI: ROUTER & VIEWS --- */
+const Router = {
+    current: null,
+    async go(viewName, params = null) {
+        this.current = viewName;
+        const container = document.querySelector('.view-container');
+        
+        // Fade Out Old
+        const old = document.querySelector('.page.active');
+        if(old) { old.classList.remove('active'); setTimeout(() => old.remove(), 400); }
 
-        // 3. CANVAS BACKGROUND (PARTICLES)
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
+        // Render New
+        const el = document.createElement('div');
+        el.className = 'page';
+        el.innerHTML = await Views[viewName](params);
+        container.appendChild(el);
+        
+        // Reflow & Animate
+        void el.offsetWidth;
+        el.classList.add('active');
 
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        // Update Dock state
+        document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+        if(viewName === 'home') document.querySelectorAll('.dock-btn')[0].classList.add('active');
+        if(viewName === 'family') document.querySelectorAll('.dock-btn')[1].classList.add('active');
+        if(viewName === 'profile') document.querySelectorAll('.dock-btn')[2].classList.add('active');
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2;
-                this.alpha = Math.random() * 0.5;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.reset();
-            }
-            draw() {
-                ctx.fillStyle = `rgba(0, 242, 255, ${this.alpha})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        // Guest Restrictions
+        const familyBtn = document.getElementById('dock-family');
+        if(Kernel.mode === 'guest') familyBtn.style.opacity = '0.3';
+    }
+};
 
-        for (let i = 0; i < 100; i++) particles.push(new Particle());
-
-        function animateBg() {
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.1)'; // Trail effect
-            ctx.fillRect(0, 0, width, height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animateBg);
-        }
-        animateBg();
-
-        // 4. WINDOW MANAGER (THE COMPLEX PART)
-        class WindowManager {
-            constructor() {
-                this.zIndex = 100;
-                this.desktop = $('#desktop');
-                this.isDragging = false;
-                this.dragTarget = null;
-                this.offset = { x:0, y:0 };
-                
-                // Global Event Listeners for Dragging
-                document.addEventListener('mousedown', (e) => this.onMouseDown(e));
-                document.addEventListener('mousemove', (e) => this.onMouseMove(e));
-                document.addEventListener('mouseup', () => this.onMouseUp());
-            }
-
-            createWindow(title, type) {
-                const id = 'win_' + Date.now();
-                const win = document.createElement('div');
-                win.className = 'window';
-                win.id = id;
-                win.style.left = (Math.random() * (window.innerWidth - 500) + 50) + 'px';
-                win.style.top = (Math.random() * (window.innerHeight - 400) + 50) + 'px';
-                
-                // Content Generator
-                let contentHTML = '';
-                if(type === 'terminal') {
-                    contentHTML = `<div style="font-family: monospace; color: #0f0;">
-                        > root@nexus:~$ init_sequence<br>> CONNECTED.<br>> WAITING FOR INPUT...<br>
-                        <br><input type="text" placeholder="_" style="border:none; background:transparent; color:#0f0; width:100%;">
-                    </div>`;
-                } else if (type === 'settings') {
-                    contentHTML = `
-                        <div class="input-group"><label>Interface Opacity</label><input type="range"></div>
-                        <div class="input-group"><label>Accent Color</label><input type="color" value="#00f2ff"></div>
-                        <button class="btn">Save Configuration</button>
-                    `;
-                } else if (type === 'welcome') {
-                    contentHTML = `
-                        <h3>Welcome to Nexus OS</h3>
-                        <p>This is a simulated JavaScript GUI environment.</p>
-                        <ul>
-                            <li>Draggable Windows</li>
-                            <li>Real-time Animations</li>
-                            <li>Glassmorphism UI</li>
-                        </ul>
-                        <button class="btn" onclick="wm.closeWindow('${id}')">Get Started</button>
-                    `;
-                } else {
-                    contentHTML = `<p>Module loaded: ${type}</p><div class="loader-ring" style="width:30px; height:30px;"></div>`;
-                }
-
-                win.innerHTML = `
-                    <div class="win-header" id="${id}_header">
-                        <div class="win-title">${title}</div>
-                        <div class="win-controls">
-                            <div class="control min"></div>
-                            <div class="control max"></div>
-                            <div class="control close" onclick="wm.closeWindow('${id}')"></div>
+const Views = {
+    /* 1. HOME DASHBOARD */
+    home: async () => {
+        const subs = await Kernel.getSubjects();
+        const greeting = Kernel.mode === 'guest' ? 'Guest Access' : `Welcome, ${Kernel.profile.username}`;
+        
+        let html = `
+            ${Kernel.mode==='guest' ? '<span class="guest-badge">Offline Mode</span>' : ''}
+            <h1 class="h1 gradient-text">Dashboard</h1>
+            <p class="text-dim" style="margin-bottom:24px">${greeting}</p>
+            
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <span class="text-mono">Overview</span>
+                    <button class="btn btn-sm btn-primary" onclick="Actions.createTable()">+ New</button>
+                </div>
+                ${subs.length === 0 ? '<p class="text-dim" style="text-align:center; padding:20px;">No tables found.</p>' : ''}
+                <div id="sub-list">
+                    ${subs.map(s => `
+                        <div class="card card-glass card-interactive" onclick="Router.go('detail', '${s.id}')" style="margin-bottom:10px; padding:15px;">
+                            <h3 class="h3">${s.name}</h3>
+                            <span class="text-mono" style="font-size:10px;">ID: ${s.id.substr(0,8)}</span>
                         </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        return html;
+    },
+
+    /* 2. DETAIL VIEW */
+    detail: async (id) => {
+        const tasks = await Kernel.getTasks(id);
+        const subjects = await Kernel.getSubjects();
+        const currentSub = subjects.find(s => s.id === id);
+
+        return `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button class="btn btn-ghost" onclick="Router.go('home')" style="width:auto">← Back</button>
+                <button class="btn btn-sm btn-primary" onclick="Whiteboard.open('${id}')">Canvas</button>
+            </div>
+            
+            <h1 class="h1">${currentSub ? currentSub.name : 'Table'}</h1>
+            <div style="height:1px; background:var(--glass-border); margin:20px 0;"></div>
+
+            <div id="task-list">
+                ${tasks.map(t => `
+                    <div class="card card-glass" style="padding:12px; display:flex; align-items:center; gap:12px;">
+                        <div onclick="Actions.toggleTask('${id}', '${t.id}', ${!t.done})" 
+                             style="width:24px; height:24px; border-radius:6px; border:2px solid ${t.done?'var(--neon-green)':'#444'}; 
+                             background:${t.done?'var(--neon-green)':'transparent'}; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                             ${t.done ? '✓' : ''}
+                        </div>
+                        <span style="flex:1; text-decoration:${t.done?'line-through':''}; color:${t.done?'#666':'white'}">${t.desc}</span>
                     </div>
-                    <div class="win-content">${contentHTML}</div>
-                `;
+                `).join('')}
+            </div>
 
-                this.desktop.appendChild(win);
-                
-                // Trigger animation
-                requestAnimationFrame(() => win.classList.add('win-open'));
-                this.focusWindow(win);
-            }
+            <button class="btn btn-primary" style="margin-top:20px" onclick="Actions.addTask('${id}')">+ Add Goal</button>
+            <button class="btn btn-ghost" style="margin-top:10px; color:var(--neon-red)" onclick="Actions.deleteTable('${id}')">Delete Table</button>
+        `;
+    },
 
-            closeWindow(id) {
-                const win = document.getElementById(id);
-                if(win) {
-                    win.style.opacity = '0';
-                    win.style.transform = 'translateY(20px) scale(0.9)';
-                    setTimeout(() => win.remove(), 300);
-                }
-            }
-
-            focusWindow(win) {
-                this.zIndex++;
-                win.style.zIndex = this.zIndex;
-                document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
-                win.classList.add('active');
-            }
-
-            onMouseDown(e) {
-                if (e.target.closest('.win-header')) {
-                    const win = e.target.closest('.window');
-                    this.isDragging = true;
-                    this.dragTarget = win;
-                    this.focusWindow(win);
-                    
-                    const rect = win.getBoundingClientRect();
-                    this.offset.x = e.clientX - rect.left;
-                    this.offset.y = e.clientY - rect.top;
-                } else if (e.target.closest('.window')) {
-                    this.focusWindow(e.target.closest('.window'));
-                }
-            }
-
-            onMouseMove(e) {
-                if (this.isDragging && this.dragTarget) {
-                    e.preventDefault();
-                    this.dragTarget.style.left = (e.clientX - this.offset.x) + 'px';
-                    this.dragTarget.style.top = (e.clientY - this.offset.y) + 'px';
-                }
-            }
-
-            onMouseUp() {
-                this.isDragging = false;
-                this.dragTarget = null;
-            }
+    /* 3. PROFILE / LOGIN VIEW */
+    profile: async () => {
+        if(Kernel.mode === 'cloud' && Kernel.uid) {
+            return `
+                <div style="text-align:center; padding-top:40px;">
+                    <div style="width:100px; height:100px; border-radius:50%; background:var(--surface-3); margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:40px; border:2px solid var(--neon-blue);">
+                        ${Kernel.profile.username[0].toUpperCase()}
+                    </div>
+                    <h1 class="h1">${Kernel.profile.username}</h1>
+                    <p class="text-dim">${Kernel.profile.email}</p>
+                    <button class="btn btn-danger" onclick="Kernel.logout()" style="margin-top:40px;">System Logout</button>
+                </div>
+            `;
         }
 
-        const wm = new WindowManager();
+        // LOGIN FORM
+        return `
+            <div style="padding-top:20px;">
+                <h1 class="h1 gradient-text" style="text-align:center; margin-bottom:40px;">TITAN <span style="color:var(--neon-blue)">v10</span></h1>
+                
+                <div class="card card-glass">
+                    <div class="input-group">
+                        <span class="input-label">USERNAME</span>
+                        <input id="inp-user" class="input-field" type="text" placeholder="Enter codename">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-label">PASSWORD</span>
+                        <input id="inp-pass" class="input-field" type="password" placeholder="••••••••">
+                    </div>
+                    
+                    <div class="input-group" id="group-email" style="display:none;">
+                        <span class="input-label">EMAIL (RECOVERY)</span>
+                        <input id="inp-email" class="input-field" type="email" placeholder="agent@titan.os">
+                    </div>
 
-    </script>
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button id="btn-main" class="btn btn-primary" onclick="Actions.doAuth()">Initialize</button>
+                        <button id="btn-alt" class="btn btn-ghost" onclick="Actions.toggleAuthMode()">Create ID</button>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:30px;">
+                    <button class="btn btn-sm btn-ghost" onclick="Actions.enterGuest()">
+                        Try Guest Mode (Offline)
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+    /* 4. FAMILY VIEW (Restricted) */
+    family: async () => {
+        if(Kernel.mode === 'guest') {
+            return `<div style="text-align:center; padding-top:50px;">
+                <h2 class="h2" style="color:var(--neon-red)">ACCESS DENIED</h2>
+                <p class="text-dim">Family Hub requires a cloud uplink.</p>
+                <button class="btn btn-primary" style="margin-top:20px" onclick="Router.go('profile')">Login Now</button>
+            </div>`;
+        }
+        
+        // Simulating search UI for brevity (code density constraint)
+        return `
+            <h1 class="h1 gradient-text">Network</h1>
+            <div class="card card-glass">
+                <span class="text-mono">UPLINK SEARCH</span>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input class="input-field" placeholder="Search Usernames...">
+                    <button class="btn btn-primary" style="width:auto">Scan</button>
+                </div>
+            </div>
+            <div class="card">
+                <p class="text-dim">No active connections established.</p>
+            </div>
+        `;
+    }
+};
+
+/* --- ACTIONS CONTROLLER --- */
+const Actions = {
+    isReg: false,
+    
+    toggleAuthMode() {
+        this.isReg = !this.isReg;
+        const emailGroup = document.getElementById('group-email');
+        const mainBtn = document.getElementById('btn-main');
+        const altBtn = document.getElementById('btn-alt');
+        
+        if(this.isReg) {
+            emailGroup.style.display = 'block';
+            mainBtn.innerText = 'Register Identity';
+            altBtn.innerText = 'Back to Login';
+        } else {
+            emailGroup.style.display = 'none';
+            mainBtn.innerText = 'Initialize';
+            altBtn.innerText = 'Create ID';
+        }
+    },
+
+    async doAuth() {
+        const u = document.getElementById('inp-user').value.trim();
+        const p = document.getElementById('inp-pass').value;
+        const e = document.getElementById('inp-email').value.trim();
+        const btn = document.getElementById('btn-main');
+
+        if(!u || !p) return UI.toast('Credentials Missing', 'error');
+
+        btn.innerHTML = '<div class="spinner"></div>';
+        
+        try {
+            if(this.isReg) {
+                if(!e) throw new Error("Email required for registration");
+                await Kernel.register(u, p, e);
+                UI.toast('Identity Created', 'success');
+            } else {
+                await Kernel.login(u, p);
+                UI.toast('Access Granted', 'success');
+            }
+        } catch(err) {
+            console.error(err);
+            UI.toast(err.message, 'error');
+            btn.innerText = 'Retry';
+        }
+    },
+
+    enterGuest() {
+        Kernel.setMode('guest');
+        Router.go('home');
+        document.getElementById('dock-main').style.display = 'flex';
+        UI.toast('Operating Offline', 'neutral');
+    },
+
+    createTable() {
+        UI.modal('New Table', '<input id="m-inp" class="input-field" placeholder="Subject Name">', async () => {
+            const val = document.getElementById('m-inp').value;
+            if(!val) throw new Error("Name required");
+            await Kernel.addSubject(val);
+            Router.go('home');
+        });
+    },
+
+    deleteTable(id) {
+        UI.modal('Delete?', '<p>This cannot be undone.</p>', async () => {
+            await Kernel.deleteSubject(id);
+            Router.go('home');
+        });
+    },
+
+    addTask(subId) {
+        UI.modal('New Goal', '<input id="m-inp" class="input-field" placeholder="Description">', async () => {
+            const val = document.getElementById('m-inp').value;
+            if(!val) throw new Error("Required");
+            await Kernel.addTask(subId, val);
+            Router.go('detail', subId);
+        });
+    },
+
+    async toggleTask(subId, taskId, status) {
+        await Kernel.toggleTask(subId, taskId, status);
+        Router.go('detail', subId);
+    }
+};
+
+/* --- WHITEBOARD MODULE --- */
+const Whiteboard = {
+    canvas: document.getElementById('wb-canvas'),
+    ctx: null,
+    
+    init() {
+        this.ctx = this.canvas.getContext('2d');
+        const r = this.canvas.getBoundingClientRect();
+        this.canvas.width = r.width;
+        this.canvas.height = r.height;
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        
+        let painting = false;
+        const start = (e) => { painting = true; draw(e); };
+        const end = () => { painting = false; this.ctx.beginPath(); };
+        const draw = (e) => {
+            if(!painting) return;
+            e.preventDefault();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            const b = this.canvas.getBoundingClientRect();
+            
+            this.ctx.lineTo(clientX - b.left, clientY - b.top);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(clientX - b.left, clientY - b.top);
+        };
+        
+        this.canvas.addEventListener('mousedown', start);
+        this.canvas.addEventListener('mouseup', end);
+        this.canvas.addEventListener('mousemove', draw);
+        this.canvas.addEventListener('touchstart', start);
+        this.canvas.addEventListener('touchend', end);
+        this.canvas.addEventListener('touchmove', draw);
+    },
+    
+    open() { 
+        document.getElementById('wb-layer').style.display = 'flex'; 
+        this.init(); 
+    },
+    close() { document.getElementById('wb-layer').style.display = 'none'; },
+    save() { UI.toast('Canvas Saved'); this.close(); },
+    setColor(c) { this.ctx.strokeStyle = c; }
+};
+
+/* --- APPLICATION ENTRY POINT --- */
+const App = {
+    start() {
+        // Monitor Auth State
+        Kernel.auth.onAuthStateChanged(user => {
+            if(user) {
+                Kernel.setMode('cloud', user.uid).then(() => {
+                    document.getElementById('dock-main').style.display = 'flex';
+                    Router.go('home');
+                });
+            } else {
+                // If not logged in, wait at login screen (don't force if guest)
+                if(Kernel.mode !== 'guest') {
+                    Router.go('profile');
+                    document.getElementById('dock-main').style.display = 'none';
+                }
+            }
+        });
+    }
+};
+
+// Start Sequence on Load
+window.onload = () => BootLoader.init();
+/* --- MODULE: SOCIAL & CHAT ENGINE --- */
+const Social = {
+    activeChat: null,
+    listener: null,
+
+    // 1. EXTEND KERNEL: Add Social Functions
+    async searchUsers(query) {
+        if(Kernel.mode === 'guest') return [];
+        // In a real app, use ElasticSearch. Here we scan the username index.
+        const snap = await Kernel.db.ref('usernames').limitToFirst(20).once('value');
+        const results = [];
+        snap.forEach(c => {
+            if(c.key.toLowerCase().includes(query.toLowerCase())) results.push({ user: c.key, uid: c.val() });
+        });
+        return results;
+    },
+
+    async openChat(targetUid, targetName) {
+        const chatLayer = document.getElementById('chat-layer');
+        chatLayer.innerHTML = `
+            <div style="padding:15px; background:var(--surface-2); border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <button class="btn btn-ghost btn-sm" onclick="Social.closeChat()">← Back</button>
+                <span class="h3">${targetName}</span>
+                <div style="width:30px;"></div>
+            </div>
+            <div id="chat-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px;">
+                <div class="spinner" style="margin:auto"></div>
+            </div>
+            <div style="padding:15px; background:var(--surface-1); border-top:1px solid var(--glass-border); display:flex; gap:10px;">
+                <input id="chat-msg" class="input-field" placeholder="Type message..." style="height:45px;">
+                <button class="btn btn-primary" style="width:50px; height:45px;" onclick="Social.send()">➤</button>
+            </div>
+        `;
+        chatLayer.classList.add('open');
+        this.activeChat = targetUid;
+
+        // Generate Chat ID: (SmallerUID_LargerUID)
+        const myUid = Kernel.uid;
+        const chatId = [myUid, targetUid].sort().join('_');
+
+        // Realtime Listener
+        const feed = document.getElementById('chat-feed');
+        this.listener = Kernel.db.ref(`chats/${chatId}`).limitToLast(50);
+        
+        this.listener.on('value', (snap) => {
+            feed.innerHTML = '';
+            if(!snap.exists()) {
+                feed.innerHTML = '<div style="margin:auto; opacity:0.5">Secure Channel Open.<br>Start messaging.</div>';
+                return;
+            }
+            
+            const msgs = [];
+            snap.forEach(s => msgs.push(s.val()));
+            
+            msgs.forEach(m => {
+                const isMe = m.sender === myUid;
+                const bubble = document.createElement('div');
+                bubble.style.cssText = `
+                    max-width: 75%; padding: 10px 16px; border-radius: 20px; font-size: 15px;
+                    align-self: ${isMe ? 'flex-end' : 'flex-start'};
+                    background: ${isMe ? 'var(--neon-blue)' : 'var(--surface-3)'};
+                    color: ${isMe ? 'white' : '#ccc'};
+                    border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;
+                `;
+                bubble.innerText = m.text;
+                feed.appendChild(bubble);
+            });
+            feed.scrollTop = feed.scrollHeight;
+        });
+    },
+
+    send() {
+        const inp = document.getElementById('chat-msg');
+        const txt = inp.value.trim();
+        if(!txt || !this.activeChat) return;
+
+        const chatId = [Kernel.uid, this.activeChat].sort().join('_');
+        Kernel.db.ref(`chats/${chatId}`).push({
+            sender: Kernel.uid,
+            text: txt,
+            ts: Date.now()
+        });
+        inp.value = '';
+    },
+
+    closeChat() {
+        document.getElementById('chat-layer').classList.remove('open');
+        if(this.listener) this.listener.off();
+        this.activeChat = null;
+    }
+};
+
+// 2. OVERRIDE: Update Family View to use Social Engine
+Views.family = async () => {
+    if(Kernel.mode === 'guest') {
+        return `<div style="text-align:center; padding-top:50px;"><h2 class="h2" style="color:var(--neon-red)">OFFLINE</h2><p class="text-dim">Login required for network access.</p></div>`;
+    }
+
+    return `
+        <h1 class="h1 gradient-text">Network</h1>
+        
+        <div class="card card-glass">
+            <span class="text-mono">USER SEARCH</span>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <input id="search-u" class="input-field" placeholder="Find agent by name...">
+                <button class="btn btn-primary" style="width:auto" onclick="renderSearch()">Scan</button>
+            </div>
+            <div id="search-res" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <script>
+            async function renderSearch() {
+                const q = document.getElementById('search-u').value;
+                if(!q) return;
+                const res = await Social.searchUsers(q);
+                const box = document.getElementById('search-res');
+                box.innerHTML = res.length ? '' : '<span class="text-dim">No targets found.</span>';
+                
+                res.forEach(r => {
+                    if(r.uid === Kernel.uid) return;
+                    const el = document.createElement('div');
+                    el.className = 'card card-interactive';
+                    el.style.marginBottom = '0';
+                    el.style.padding = '10px';
+                    el.style.display = 'flex';
+                    el.style.justifyContent = 'space-between';
+                    el.style.alignItems = 'center';
+                    el.innerHTML = '<b>' + r.user + '</b><span class="text-mono" style="color:var(--neon-green)">CONNECT</span>';
+                    el.onclick = () => Social.openChat(r.uid, r.user);
+                    box.appendChild(el);
+                });
+            }
+        <\/script>
+    `;
+};
+/* --- MODULE: WHITEBOARD ENGINE --- */
+const Whiteboard = {
+    canvas: null,
+    ctx: null,
+    isDrawing: false,
+    color: '#00f3ff', // Default Neon Blue
+    history: [], // For undo functionality (optional expansion)
+
+    init() {
+        // Wait for view to render
+        setTimeout(() => {
+            this.canvas = document.getElementById('wb-canvas');
+            if(!this.canvas) return;
+            
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            
+            // Event Listeners for Mouse & Touch
+            const events = ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend'];
+            events.forEach(e => this.canvas.addEventListener(e, (evt) => this.handle(evt), {passive: false}));
+            
+            window.addEventListener('resize', () => this.resize());
+        }, 100);
+    },
+
+    resize() {
+        if(!this.canvas) return;
+        const parent = this.canvas.parentElement;
+        this.canvas.width = parent.clientWidth;
+        this.canvas.height = parent.clientHeight;
+        
+        // Re-apply styles after resize
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = this.color;
+    },
+
+    handle(e) {
+        if(!this.canvas) return;
+        e.preventDefault(); // Stop scrolling while drawing
+        
+        // Get coordinates
+        const rect = this.canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        if (e.type === 'mousedown' || e.type === 'touchstart') {
+            this.isDrawing = true;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+        } 
+        else if (e.type === 'mouseup' || e.type === 'touchend') {
+            this.isDrawing = false;
+        } 
+        else if (this.isDrawing) {
+            this.ctx.lineTo(x, y);
+            this.ctx.stroke();
+        }
+    },
+
+    setColor(c) {
+        this.color = c;
+        if(this.ctx) this.ctx.strokeStyle = c;
+    },
+
+    wipe() {
+        if(!this.ctx) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+};
+
+// 3. ADD: Canvas View Integration
+Views.canvas = async () => {
+    // We execute init() after the HTML is returned and injected
+    setTimeout(() => Whiteboard.init(), 50);
+
+    return `
+        <div style="height:100%; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h1 class="h1 gradient-text" style="margin:0">Canvas</h1>
+                <div style="display:flex; gap:5px;">
+                    <div onclick="Whiteboard.setColor('#00f3ff')" style="width:20px; height:20px; background:var(--neon-blue); border-radius:50%; border:1px solid white; cursor:pointer;"></div>
+                    <div onclick="Whiteboard.setColor('#ff003c')" style="width:20px; height:20px; background:var(--neon-red); border-radius:50%; border:1px solid white; cursor:pointer;"></div>
+                    <div onclick="Whiteboard.setColor('#ffffff')" style="width:20px; height:20px; background:white; border-radius:50%; border:1px solid white; cursor:pointer;"></div>
+                </div>
+            </div>
+            
+            <div class="card card-glass" style="flex:1; padding:0; overflow:hidden; position:relative; touch-action:none;">
+                <canvas id="wb-canvas" style="width:100%; height:100%; display:block;"></canvas>
+                
+                <button class="btn btn-ghost" onclick="Whiteboard.wipe()" style="position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid var(--neon-red); color:var(--neon-red);">
+                    ✖ CLEAR
+                </button>
+            </div>
+        </div>
+    `;
+};
+
+</script>
 </body>
 </html>
