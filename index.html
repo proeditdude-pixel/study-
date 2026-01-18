@@ -9,38 +9,34 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { --glass: rgba(255,255,255,0.08); --border: rgba(255,255,255,0.12); --accent: #34c759; }
+        :root { --glass: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.1); --accent: #007aff; }
         body, html { margin:0; padding:0; background:#000; color:#fff; font-family:-apple-system, sans-serif; height:100vh; overflow:hidden; }
         .wallpaper { position:fixed; inset:0; z-index:-1; background:radial-gradient(circle at top right, #1a1c2c, #000); }
         
-        /* GUI Framework */
-        .screen { position:absolute; inset:0; padding:60px 25px 120px; opacity:0; transform:translateY(10px); pointer-events:none; transition:0.4s; overflow-y:auto; }
-        .screen-active { opacity:1; transform:translateY(0); pointer-events:auto; }
-        .glass { background:var(--glass); backdrop-filter:blur(30px); border:0.5px solid var(--border); border-radius:24px; padding:20px; margin-bottom:15px; }
+        /* GUI Components */
+        .screen { position:absolute; inset:0; padding:60px 25px 120px; opacity:0; pointer-events:none; transition:0.4s; overflow-y:auto; }
+        .screen-active { opacity:1; pointer-events:auto; }
+        .glass-card { background:var(--glass); backdrop-filter:blur(40px); border:1px solid var(--border); border-radius:22px; padding:20px; margin-bottom:15px; }
         
-        /* Custom Input UI */
-        .gui-input { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:14px; padding:15px; color:#fff; font-size:16px; width:calc(100% - 30px); outline:none; margin-bottom:10px; }
-        .gui-input:focus { border-color: #fff; }
+        .gui-input { background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:12px; padding:12px; color:#fff; width:calc(100% - 26px); margin-bottom:10px; outline:none; font-size:15px; }
+        .gui-btn { padding:16px; border-radius:14px; border:none; font-weight:700; cursor:pointer; width:100%; transition:0.2s; }
+        .gui-btn-primary { background:#fff; color:#000; }
+        .gui-btn-sec { background:var(--glass); color:#fff; border:1px solid var(--border); }
 
-        /* Custom Button UI */
-        .gui-btn { width:100%; padding:18px; border-radius:18px; border:none; font-weight:700; cursor:pointer; transition:0.2s; font-size:14px; display:block; text-align:center; }
-        .gui-btn:active { transform: scale(0.97); }
-        .gui-btn-white { background:#fff; color:#000; }
-        .gui-btn-glass { background:var(--glass); color:#fff; border:0.5px solid var(--border); }
+        /* Profile & Tables */
+        .banner { width:100%; height:130px; border-radius:18px; object-fit:cover; }
+        .pfp-wrap { width:75px; height:75px; border-radius:20px; border:4px solid #000; margin-top:-38px; margin-left:15px; overflow:hidden; }
+        .badge { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:bold; margin-right:5px; background:var(--accent); }
+        
+        .task-row { display:flex; flex-direction:column; gap:5px; padding:12px; border-bottom:1px solid var(--border); }
+        .task-meta { display:flex; justify-content:space-between; font-size:11px; opacity:0.5; }
 
-        /* Profile & Icons */
-        .banner { width:100%; height:140px; border-radius:20px; object-fit:cover; background:#222; }
-        .pfp-wrap { width:80px; height:80px; border-radius:20px; border:4px solid #000; margin-top:-40px; margin-left:20px; overflow:hidden; background:#333; }
-        .pfp-wrap img { width:100%; height:100%; object-fit:cover; }
+        /* Dialog Overlay */
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:center; justify-content:center; }
         
-        /* Custom Dialogs */
-        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9000; display:none; align-items:center; justify-content:center; padding:25px; }
-        
-        .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:30px; display:flex; justify-content:space-around; align-items:center; border:0.5px solid var(--border); }
-        .nav-item { opacity:0.4; font-size:10px; font-weight:800; cursor:pointer; }
+        .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:30px; display:flex; justify-content:space-around; align-items:center; border:1px solid var(--border); }
+        .nav-item { opacity:0.4; font-size:10px; font-weight:bold; cursor:pointer; }
         .nav-item.active { opacity:1; }
-
-        .family-row { display:flex; align-items:center; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.03); border-radius:15px; margin-bottom:8px; }
     </style>
 </head>
 <body>
@@ -48,42 +44,52 @@
     <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size:34px; font-weight:900; margin-bottom:30px;">Subjects</h1>
-        <div id="table-list"></div>
-        <button class="gui-btn gui-btn-white" onclick="gui.openDialog('subject')">+ New Subject</button>
+        <h1 style="font-size:32px; font-weight:900;">My Subjects</h1>
+        <div id="subject-container"></div>
+        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-subject')">+ Create Subject</button>
     </div>
 
-    <div id="view-settings" class="screen">
-        <div onclick="ui.show('profile')" style="font-weight:800; opacity:0.6; margin-bottom:20px; cursor:pointer;">← Back</div>
-        <h2 style="font-size:32px;">Family Center</h2>
-        <div class="glass">
-            <input type="text" id="fam-in" class="gui-input" placeholder="Username to invite">
-            <button class="gui-btn gui-btn-white" onclick="core.sendInvite()">Invite Member</button>
-        </div>
-        <div id="family-list"></div>
+    <div id="view-detail" class="screen">
+        <div onclick="ui.show('home')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back to Subjects</div>
+        <h2 id="active-subject-name" style="font-size:28px; margin:0;"></h2>
+        <div id="task-container" style="margin-top:20px;"></div>
+        <button class="gui-btn gui-btn-primary" style="margin-top:20px;" onclick="gui.open('new-task')">+ Add Goal / Task</button>
     </div>
 
     <div id="view-profile" class="screen" style="padding:0;">
         <div style="position:relative;">
             <img id="u-banner" src="https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800" class="banner">
-            <div onclick="ui.show('settings')" style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); padding:10px; border-radius:15px; cursor:pointer;">⚙️ Family</div>
+            <div onclick="ui.show('settings')" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.4); padding:8px 15px; border-radius:12px; font-size:12px; cursor:pointer;">⚙️ Family Center</div>
         </div>
         <div class="pfp-wrap"><img id="u-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest"></div>
         <div style="padding:20px;">
-            <h1 id="u-name" style="margin:0;">Guest</h1>
-            <p id="u-date" style="opacity:0.5; font-size:12px; margin-bottom:30px;"></p>
-            <div id="auth-box">
-                <button class="gui-btn gui-btn-white" onclick="gui.openDialog('auth')">Sign Up / Login</button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h1 id="u-name" style="margin:0;">Guest</h1>
+                <div id="u-badges"></div>
             </div>
-            <button id="logout-btn" class="gui-btn gui-btn-glass" style="display:none; color:#ff453a; margin-top:20px;" onclick="core.logout()">Sign Out</button>
+            <p id="u-date" style="opacity:0.5; font-size:12px;"></p>
+            <div id="auth-box" style="margin-top:20px;">
+                <button class="gui-btn gui-btn-primary" onclick="gui.open('auth')">Login / Sign Up</button>
+            </div>
+            <button id="logout-btn" class="gui-btn gui-btn-sec" style="display:none; color:#ff453a; margin-top:20px;" onclick="core.logout()">Log Out</button>
         </div>
     </div>
 
-    <div id="gui-dialog" class="overlay">
-        <div class="glass" style="width:100%; max-width:320px;">
-            <h2 id="gui-title" style="margin-top:0;">Dialog</h2>
-            <div id="gui-content"></div>
-            <div id="gui-actions" style="margin-top:20px;"></div>
+    <div id="view-settings" class="screen">
+        <div onclick="ui.show('profile')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back</div>
+        <h2 style="font-size:28px;">Family Center</h2>
+        <div class="glass-card">
+            <input type="text" id="fam-input" class="gui-input" placeholder="User to invite...">
+            <button class="gui-btn gui-btn-primary" onclick="core.invite()">Invite</button>
+        </div>
+        <div id="family-list"></div>
+    </div>
+
+    <div id="dialog" class="overlay">
+        <div class="glass-card" style="width:85%; max-width:320px;">
+            <h3 id="d-title" style="margin-top:0;">Dialog</h3>
+            <div id="d-body"></div>
+            <div id="d-footer" style="margin-top:20px; display:flex; gap:10px;"></div>
         </div>
     </div>
 
@@ -93,7 +99,7 @@
     </nav>
 
 <script>
-    // Config & Init
+    // 1. Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -102,133 +108,140 @@
       storageBucket: "syllabuspro-4ec5c.firebasestorage.app"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const rdb = firebase.database();
 
+    // 2. Local State (No removals, just expansions)
     let state = {
-        user: localStorage.getItem('ss_user'),
-        tables: JSON.parse(localStorage.getItem('ss_tables')) || [],
-        family: JSON.parse(localStorage.getItem('ss_fam')) || []
+        user: localStorage.getItem('ss_u'),
+        subjects: JSON.parse(localStorage.getItem('ss_s')) || [],
+        family: JSON.parse(localStorage.getItem('ss_f')) || [],
+        badges: JSON.parse(localStorage.getItem('ss_b')) || ["Pro"],
+        created: localStorage.getItem('ss_d') || "Jan 18, 2026",
+        activeIdx: null
     };
 
-    // GUI Controller
+    // 3. GUI Logic (Custom Dialogs)
     const gui = {
-        openDialog(type, data) {
-            const content = document.getElementById('gui-content');
-            const actions = document.getElementById('gui-actions');
-            const title = document.getElementById('gui-title');
-            content.innerHTML = ""; actions.innerHTML = "";
+        open(type) {
+            const body = document.getElementById('d-body');
+            const foot = document.getElementById('d-footer');
+            const head = document.getElementById('d-title');
+            body.innerHTML = ""; foot.innerHTML = "";
             
-            if(type === 'subject') {
-                title.innerText = "New Subject";
-                content.innerHTML = `<input type="text" id="gui-v1" class="gui-input" placeholder="Subject Name">`;
-                actions.innerHTML = `<button class="gui-btn gui-btn-white" onclick="core.newSubject()">Create</button>
-                                     <button class="gui-btn gui-btn-glass" style="margin-top:10px" onclick="gui.close()">Cancel</button>`;
+            if(type === 'new-subject') {
+                head.innerText = "Add Subject";
+                body.innerHTML = `<input id="v1" class="gui-input" placeholder="e.g. Mathematics">`;
+                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addSubject()">Create</button>`;
+            }
+            if(type === 'new-task') {
+                head.innerText = "Add Task / Goal";
+                body.innerHTML = `
+                    <input id="v1" class="gui-input" placeholder="Task Name">
+                    <input id="v2" type="date" class="gui-input" value="2026-01-18">
+                `;
+                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addTask()">Save</button>`;
             }
             if(type === 'auth') {
-                title.innerText = "Sign In";
-                content.innerHTML = `<input type="text" id="gui-u" class="gui-input" placeholder="Username">
-                                     <input type="password" id="gui-p" class="gui-input" placeholder="Password">`;
-                actions.innerHTML = `<button class="gui-btn gui-btn-white" onclick="core.auth()">Enter</button>
-                                     <button class="gui-btn gui-btn-glass" style="margin-top:10px" onclick="gui.close()">Close</button>`;
+                head.innerText = "Account Sync";
+                body.innerHTML = `<input id="v1" class="gui-input" placeholder="Username">`;
+                foot.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.login()">Continue</button>`;
             }
-            if(type === 'msg') {
-                title.innerText = "Notice";
-                content.innerHTML = `<p style="opacity:0.8">${data}</p>`;
-                actions.innerHTML = `<button class="gui-btn gui-btn-white" onclick="gui.close()">Okay</button>`;
-            }
-            if(type === 'viewer') {
-                title.innerText = data.name + "'s Progress";
-                content.innerHTML = `<div style="max-height:200px; overflow-y:auto;">
-                    ${data.tables.map(t => `<div class="glass" style="padding:10px; font-size:14px;"><b>${t.name}</b> (${t.tasks ? t.tasks.length : 0} Goals)</div>`).join('')}
-                </div>`;
-                actions.innerHTML = `<button class="gui-btn gui-btn-white" onclick="gui.close()">Back</button>`;
-            }
-            document.getElementById('gui-dialog').style.display = 'flex';
+            document.getElementById('dialog').style.display = 'flex';
         },
-        close() { document.getElementById('gui-dialog').style.display = 'none'; }
+        close() { document.getElementById('dialog').style.display = 'none'; }
     };
 
+    // 4. Core Logic
+    const core = {
+        async sync() {
+            localStorage.setItem('ss_u', state.user || "");
+            localStorage.setItem('ss_s', JSON.stringify(state.subjects));
+            localStorage.setItem('ss_f', JSON.stringify(state.family));
+            localStorage.setItem('ss_b', JSON.stringify(state.badges));
+            localStorage.setItem('ss_d', state.created);
+            if(state.user) {
+                await rdb.ref('users/' + state.user.toLowerCase()).set(state);
+            }
+        },
+        addSubject() {
+            const val = document.getElementById('v1').value;
+            if(val) { state.subjects.push({name: val, tasks: []}); this.sync(); ui.renderSubjects(); gui.close(); }
+        },
+        addTask() {
+            const task = document.getElementById('v1').value;
+            const date = document.getElementById('v2').value;
+            if(task) {
+                state.subjects[state.activeIdx].tasks.push({task, date});
+                this.sync(); ui.renderTasks(); gui.close();
+            }
+        },
+        async login() {
+            const u = document.getElementById('v1').value.trim();
+            if(!u) return;
+            const snap = await rdb.ref('users/'+u.toLowerCase()).once('value');
+            if(snap.exists()) { Object.assign(state, snap.val()); }
+            else { state.user = u; }
+            this.sync(); location.reload();
+        },
+        invite() {
+            const u = document.getElementById('fam-input').value.trim();
+            if(u && !state.family.includes(u)) { state.family.push(u); this.sync(); ui.renderFamily(); }
+        },
+        logout() { localStorage.clear(); location.reload(); }
+    };
+
+    // 5. UI Rendering
     const ui = {
         show(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
             document.getElementById('view-'+id).classList.add('screen-active');
             if(el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
-            if(id === 'settings') core.loadFamily();
         },
-        renderHome() {
-            document.getElementById('table-list').innerHTML = state.tables.map((t,i) => `
-                <div class="glass"><b>${t.name}</b><br><small style="opacity:0.5;">${(t.tasks||[]).length} Tasks</small></div>
+        renderSubjects() {
+            document.getElementById('subject-container').innerHTML = state.subjects.map((s, i) => `
+                <div class="glass-card" onclick="ui.openSubject(${i})">
+                    <div style="font-size:18px; font-weight:bold;">${s.name}</div>
+                    <div style="opacity:0.5; font-size:12px;">${s.tasks.length} Goals</div>
+                </div>
+            `).join('');
+        },
+        openSubject(i) {
+            state.activeIdx = i;
+            document.getElementById('active-subject-name').innerText = state.subjects[i].name;
+            this.renderTasks(); this.show('detail');
+        },
+        renderTasks() {
+            const tasks = state.subjects[state.activeIdx].tasks;
+            document.getElementById('task-container').innerHTML = tasks.map(t => `
+                <div class="glass-card" style="padding:15px; margin-bottom:10px;">
+                    <div style="font-weight:bold;">${t.task}</div>
+                    <div class="task-meta">
+                        <span>📅 ${t.date}</span>
+                        <span style="color:var(--accent)">Active</span>
+                    </div>
+                </div>
+            `).join('');
+        },
+        renderFamily() {
+            document.getElementById('family-list').innerHTML = state.family.map(f => `
+                <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>${f}</span>
+                    <button class="gui-btn gui-btn-sec" style="width:auto; padding:5px 12px; font-size:10px;">View</button>
+                </div>
             `).join('');
         }
-    };
-
-    const core = {
-        async save() {
-            localStorage.setItem('ss_user', state.user || "");
-            localStorage.setItem('ss_tables', JSON.stringify(state.tables));
-            localStorage.setItem('ss_fam', JSON.stringify(state.family));
-            if(state.user) {
-                await db.ref('users/' + state.user.toLowerCase()).update({
-                    username: state.user.toLowerCase(),
-                    tables: state.tables,
-                    family: state.family
-                });
-            }
-        },
-        async auth() {
-            const u = document.getElementById('gui-u').value.trim();
-            if(!u) return;
-            state.user = u;
-            await this.save();
-            location.reload();
-        },
-        newSubject() {
-            const n = document.getElementById('gui-v1').value.trim();
-            if(n) { state.tables.push({name:n, tasks:[]}); this.save(); ui.renderHome(); gui.close(); }
-        },
-        async sendInvite() {
-            const target = document.getElementById('fam-in').value.trim().toLowerCase();
-            if(target && !state.family.includes(target)) {
-                state.family.push(target);
-                await this.save();
-                this.loadFamily();
-                gui.openDialog('msg', "Invitation sent to " + target);
-            }
-        },
-        async loadFamily() {
-            const list = document.getElementById('family-list');
-            list.innerHTML = "Loading...";
-            let html = "";
-            for(let member of state.family) {
-                const snap = await db.ref('users/'+member).once('value');
-                const d = snap.val();
-                if(d) {
-                    html += `<div class="family-row">
-                        <b>${member}</b>
-                        <button class="gui-btn gui-btn-white" style="width:auto; padding:8px 12px; font-size:11px;" 
-                                onclick='core.viewMember("${member}")'>View Tables</button>
-                    </div>`;
-                }
-            }
-            list.innerHTML = html || "<p style='opacity:0.4; text-align:center;'>Family is empty</p>";
-        },
-        async viewMember(uname) {
-            const s = await db.ref('users/'+uname).once('value');
-            if(s.exists()) {
-                const d = s.val();
-                gui.openDialog('viewer', {name: uname, tables: d.tables || []});
-            }
-        },
-        logout() { localStorage.clear(); location.reload(); }
     };
 
     window.onload = () => {
         if(state.user) {
             document.getElementById('u-name').innerText = state.user;
-            document.getElementById('auth-box').style.display='none';
-            document.getElementById('logout-btn').style.display='block';
+            document.getElementById('u-date').innerText = "Member Since: " + state.created;
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'block';
+            document.getElementById('u-badges').innerHTML = state.badges.map(b => `<span class="badge">${b}</span>`).join('');
         }
-        ui.renderHome();
+        ui.renderSubjects();
+        ui.renderFamily();
     };
 </script>
 </body>
