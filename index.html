@@ -10,127 +10,104 @@
 
     <style>
         :root { 
-            --apple-glass: rgba(255, 255, 255, 0.12);
-            --apple-border: rgba(255, 255, 255, 0.25);
-            --vibrancy: blur(45px) saturate(210%) brightness(1.1);
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --blur: blur(40px) saturate(200%);
         }
 
-        body, html { 
-            margin: 0; padding: 0; background: #000; color: #fff; 
-            font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden;
-        }
+        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
+        .wallpaper { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at top right, #1a1c2c, #000); }
 
-        .wallpaper {
-            position: fixed; inset: 0; z-index: -1;
-            background: radial-gradient(circle at top right, #1a1c2c, #000);
-        }
-        .orb {
-            position: absolute; width: 450px; height: 450px; border-radius: 50%;
-            filter: blur(80px); opacity: 0.15; animation: float 25s infinite alternate;
-        }
-        .orb-1 { background: #007aff; top: -10%; left: -10%; }
-        .orb-2 { background: #5856d6; bottom: -10%; right: -10%; animation-delay: -5s; }
-        @keyframes float { from { transform: translate(0,0); } to { transform: translate(120px, 60px); } }
-
-        /* Screens */
-        .screen { 
-            position: absolute; inset: 0; padding: 60px 25px 120px;
-            opacity: 0; transform: scale(0.96); pointer-events: none;
-            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); overflow-y: auto;
-        }
+        /* SCREENS */
+        .screen { position: absolute; inset: 0; padding: 60px 25px 120px; opacity: 0; transform: scale(0.98); pointer-events: none; transition: 0.4s; overflow-y: auto; }
         .screen-active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-        .glass-panel {
-            background: var(--apple-glass);
-            backdrop-filter: var(--vibrancy); -webkit-backdrop-filter: var(--vibrancy);
-            border: 0.5px solid var(--apple-border);
-            border-radius: 30px; padding: 25px; margin-bottom: 15px;
-        }
+        /* GLASS COMPONENTS */
+        .glass-panel { background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 0.5px solid var(--border); border-radius: 28px; padding: 20px; margin-bottom: 15px; }
+        
+        /* PROFILE ELEMENTS */
+        .banner { width: 100%; height: 160px; border-radius: 25px; object-fit: cover; border: 0.5px solid var(--border); }
+        .pfp-wrap { width: 90px; height: 90px; border-radius: 25px; border: 3px solid #000; margin-top: -45px; margin-left: 20px; overflow: hidden; background: #222; }
+        .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Search Layout */
-        #search-screen {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(55px) saturate(200%); z-index: 5000;
-            display: none; flex-direction: column; padding: 60px 25px;
-        }
-        .search-bar {
-            background: rgba(255,255,255,0.1); border: 0.5px solid var(--apple-border);
-            border-radius: 22px; padding: 6px 15px; display: flex; align-items: center;
-        }
-        .search-bar input { background: transparent; border: none; color: #fff; font-size: 17px; width: 100%; outline: none; padding: 10px; }
-        .search-btn { background: #fff; color: #000; border: none; border-radius: 12px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
+        /* SEARCH BAR */
+        .search-wrap { display: flex; gap: 10px; background: rgba(255,255,255,0.1); border: 0.5px solid var(--border); border-radius: 18px; padding: 8px 15px; align-items: center; }
+        .search-wrap input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
 
-        .result-item {
-            padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.06);
-            margin-top: 10px; display: flex; align-items: center; gap: 12px;
-            border: 0.5px solid transparent;
-        }
-        .res-avatar { width: 40px; height: 40px; border-radius: 14px; background: #222; }
+        /* BUTTONS */
+        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-main { background: #fff; color: #000; width: 100%; }
+        .btn-glass { background: var(--glass); color: #fff; border: 0.5px solid var(--border); }
 
-        /* UI Kit */
-        .btn { width: 100%; padding: 20px; border-radius: 22px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
-        .btn-white { background: #fff; color: #000; }
-        .btn-glass { background: rgba(255,255,255,0.1); color: #fff; border: 0.5px solid var(--apple-border); }
-        .input-apple { width: 100%; background: rgba(0,0,0,0.3); border: 0.5px solid var(--apple-border); padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px; box-sizing: border-box; outline: none; }
-
-        .dock {
-            position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px;
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(30px);
-            border: 0.5px solid var(--apple-border); border-radius: 35px;
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        /* DOCK */
+        .dock { position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 0.5px solid var(--border); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .nav-item.active { color: #fff; }
+
+        .result-item { padding: 12px; border-radius: 15px; background: rgba(255,255,255,0.05); margin-top: 8px; display: flex; align-items: center; gap: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="wallpaper"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+    <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size: 42px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
+        <h1 style="font-size: 40px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
         <div id="table-display"></div>
-        <button class="btn btn-white" onclick="ui.openCreate()">+ New Subject</button>
+        <button class="btn btn-main" onclick="core.createTable()">+ New Subject</button>
     </div>
 
-    <div id="search-screen">
-        <div class="search-bar">
-            <input type="text" id="q" placeholder="Search Subjects, Goals, or Users..." onkeydown="if(event.key==='Enter') search.run(this.value)">
-            <button class="search-btn" onclick="search.run(document.getElementById('q').value)">Search</button>
-            <span onclick="ui.closeSearch()" style="margin-left:15px; cursor:pointer; font-size:22px;">✕</span>
-        </div>
-        <div id="search-results" style="margin-top:20px; overflow-y:auto"></div>
+    <div id="view-detail" class="screen">
+        <button class="btn btn-glass" onclick="ui.show('home')" style="padding: 10px 20px; margin-bottom: 20px;">← Back</button>
+        <h2 id="det-name" style="font-size: 32px; margin: 0;"></h2>
+        <div id="task-list" style="margin: 20px 0;"></div>
+        <button class="btn btn-main" onclick="core.addTask()">+ Add Goal</button>
+        <button class="btn btn-glass" onclick="core.deleteTable()" style="margin-top:10px; color:#ff3b30; width:100%;">Delete Subject</button>
     </div>
 
-    <div id="view-profile" class="screen">
-        <h1 id="un-display" style="font-size: 40px; font-weight: 800;">Guest</h1>
-        <div id="guest-ui">
-            <button class="btn btn-white" onclick="ui.openModal('signup')">Sign Up</button>
-            <button class="btn btn-glass" style="margin-top:12px" onclick="ui.openModal('login')">Log In</button>
+    <div id="view-search" class="screen">
+        <div class="search-wrap">
+            <input type="text" id="sq" placeholder="Search usernames, tables, goals..." onkeydown="if(event.key==='Enter') core.search()">
+            <button onclick="core.search()" style="background:#fff; border:none; border-radius:10px; padding:5px 12px; font-weight:700;">Go</button>
         </div>
-        <div id="user-ui" style="display:none">
-            <button class="btn btn-glass" style="color:#ff3b30" onclick="auth.logout()">Log Out</button>
+        <div id="search-results" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="view-profile" class="screen" style="padding: 0 0 120px;">
+        <img id="p-banner" src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800" class="banner" onclick="core.upload('banner')">
+        <div class="pfp-wrap" onclick="core.upload('pfp')">
+            <img id="p-pfp" src="https://api.dicebear.com/7.x/notionists/svg?seed=Guest">
+        </div>
+        <div style="padding: 20px;">
+            <h1 id="un-display" style="margin:0; font-size:38px;">Guest</h1>
+            <p style="opacity:0.5;">Asia Southeast Cloud</p>
+            <div id="auth-ui">
+                <button class="btn btn-main" onclick="ui.openAuth('signup')">Sign Up</button>
+                <button class="btn btn-glass" style="width:100%; margin-top:10px" onclick="ui.openAuth('login')">Log In</button>
+            </div>
+            <button id="logout-btn" class="btn btn-glass" style="display:none; color:#ff3b30; width:100%;" onclick="core.logout()">Log Out</button>
         </div>
     </div>
 
-    <div id="modal-auth" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(25px); z-index:9000; display:none; align-items:center; justify-content:center; padding:30px;">
-        <div class="glass-panel" style="width:100%; max-width:340px">
-            <h2 id="atitle" style="margin-top:0">Authentication</h2>
-            <input type="text" id="au" class="input-apple" placeholder="Username">
-            <input type="password" id="ap" class="input-apple" placeholder="Password">
-            <button class="btn btn-white" onclick="auth.confirm()">Continue</button>
-            <button class="btn btn-glass" style="margin-top:12px" onclick="ui.closeModal()">Cancel</button>
+    <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(20px); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div class="glass-panel" style="width:100%; max-width:320px;">
+            <h2 id="m-title">Auth</h2>
+            <input type="text" id="au" style="width:100%; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #444; background:#111; color:#fff;" placeholder="Username">
+            <input type="password" id="ap" style="width:100%; padding:15px; margin-bottom:15px; border-radius:12px; border:1px solid #444; background:#111; color:#fff;" placeholder="Password">
+            <button class="btn btn-main" onclick="core.authConfirm()">Continue</button>
+            <button class="btn btn-glass" style="width:100%; margin-top:10px;" onclick="ui.closeModal()">Cancel</button>
         </div>
     </div>
+
+    <input type="file" id="file-in" style="display:none" onchange="core.handleFile(this)">
 
     <nav class="dock">
         <div class="nav-item active" onclick="ui.show('home', this)">Home</div>
-        <div class="nav-item" onclick="ui.openSearch()">Search</div>
+        <div class="nav-item" onclick="ui.show('search', this)">Search</div>
         <div class="nav-item" onclick="ui.show('profile', this)">Profile</div>
     </nav>
 
 <script>
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -141,20 +118,12 @@
     firebase.initializeApp(firebaseConfig);
     const rtdb = firebase.database();
 
-    const db = {
+    let db = {
         user: localStorage.getItem('ss_u'),
         tables: JSON.parse(localStorage.getItem('ss_t')) || [],
-        accounts: JSON.parse(localStorage.getItem('ss_a')) || {},
-        async save() {
-            localStorage.setItem('ss_t', JSON.stringify(this.tables));
-            localStorage.setItem('ss_a', JSON.stringify(this.accounts));
-            localStorage.setItem('ss_u', this.user || "");
-            if(this.user) {
-                await rtdb.ref('users/' + this.user).set({ 
-                    username: this.user, tables: this.tables, acc: this.accounts[this.user] 
-                });
-            }
-        }
+        pfp: localStorage.getItem('ss_pfp'),
+        banner: localStorage.getItem('ss_bnr'),
+        activeTable: null
     };
 
     const ui = {
@@ -162,68 +131,87 @@
             document.querySelectorAll('.screen').forEach(s=>s.classList.remove('screen-active'));
             document.getElementById('view-'+id).classList.add('screen-active');
             if(el) { document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
-            this.closeSearch();
         },
-        openSearch() { document.getElementById('search-screen').style.display='flex'; document.getElementById('q').focus(); },
-        closeSearch() { document.getElementById('search-screen').style.display='none'; },
-        openModal(m) { auth.mode=m; document.getElementById('atitle').innerText=(m==='signup'?'Sign Up':'Log In'); document.getElementById('modal-auth').style.display='flex'; },
-        closeModal() { document.getElementById('modal-auth').style.display='none'; },
-        openCreate() { const n=prompt("Subject Name:"); if(n){ db.tables.push({id:Date.now(), name:n, tasks:[]}); db.save(); this.render(); }},
-        render() {
-            document.getElementById('table-display').innerHTML = db.tables.map(t=>`
-                <div class="glass-panel">
-                    <div style="font-size:24px; font-weight:700;">${t.name}</div>
-                    <div style="font-size:12px; opacity:0.4; margin-top:5px;">${t.tasks.length} Goals Linked</div>
+        openAuth(m) { core.authMode = m; document.getElementById('m-title').innerText = m==='signup'?'Sign Up':'Log In'; document.getElementById('modal').style.display='flex'; },
+        closeModal() { document.getElementById('modal').style.display='none'; },
+        renderHome() {
+            document.getElementById('table-display').innerHTML = db.tables.map((t, i) => `
+                <div class="glass-panel" onclick="core.openTable(${i})">
+                    <div style="font-size:22px; font-weight:700;">${t.name}</div>
+                    <div style="opacity:0.5; font-size:12px;">${t.tasks.length} Goals</div>
                 </div>
             `).join('');
         }
     };
 
-    const search = {
-        async run(q) {
-            if(!q) return;
-            const resBox = document.getElementById('search-results');
-            resBox.innerHTML = '<div style="padding:20px; opacity:0.5;">Searching...</div>';
-            const query = q.toLowerCase();
-            let html = '';
+    const core = {
+        authMode: 'login',
+        uploadMode: '',
+        async save() {
+            localStorage.setItem('ss_u', db.user || "");
+            localStorage.setItem('ss_t', JSON.stringify(db.tables));
+            localStorage.setItem('ss_pfp', db.pfp || "");
+            localStorage.setItem('ss_bnr', db.banner || "");
+            if(db.user) await rtdb.ref('users/' + db.user).set({ username: db.user, tables: db.tables, pfp: db.pfp, banner: db.banner });
+        },
+        createTable() { const n = prompt("Subject Name:"); if(n) { db.tables.push({name:n, tasks:[]}); this.save(); ui.renderHome(); } },
+        openTable(i) {
+            db.activeTable = i;
+            const t = db.tables[i];
+            document.getElementById('det-name').innerText = t.name;
+            this.renderTasks();
+            ui.show('detail');
+        },
+        renderTasks() {
+            const t = db.tables[db.activeTable];
+            document.getElementById('task-list').innerHTML = t.tasks.map((tk, i) => `
+                <div class="glass-panel" style="padding:15px; display:flex; gap:10px;">
+                    <input style="background:none; border:none; color:#fff; flex:1;" value="${tk}" onchange="core.editTask(${i}, this.value)">
+                    <button onclick="core.delTask(${i})" style="background:none; border:none; color:#ff3b30;">✕</button>
+                </div>
+            `).join('');
+        },
+        addTask() { db.tables[db.activeTable].tasks.push("New Goal"); this.save(); this.renderTasks(); },
+        editTask(i, v) { db.tables[db.activeTable].tasks[i] = v; this.save(); },
+        delTask(i) { db.tables[db.activeTable].tasks.splice(i, 1); this.save(); this.renderTasks(); },
+        deleteTable() { db.tables.splice(db.activeTable, 1); this.save(); ui.renderHome(); ui.show('home'); },
+        
+        async search() {
+            const q = document.getElementById('sq').value.toLowerCase();
+            let h = '';
+            // Local
+            db.tables.forEach((t, i) => {
+                if(t.name.toLowerCase().includes(q)) h += `<div class="result-item" onclick="core.openTable(${i})">📚 ${t.name}</div>`;
+                t.tasks.forEach(tk => { if(tk.toLowerCase().includes(q)) h += `<div class="result-item">🎯 ${tk} <small>(${t.name})</small></div>`; });
+            });
+            // Cloud Users
+            const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q+"\uf8ff").once('value');
+            snap.forEach(c => {
+                const u = c.val().username;
+                if(u !== db.user) h += `<div class="result-item"><img src="${c.val().pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed='+u}" style="width:30px; border-radius:8px;"> ${u}</div>`;
+            });
+            document.getElementById('search-results').innerHTML = h || "No results found";
+        },
 
-            // 1. My Subjects
-            const myT = db.tables.filter(t => t.name.toLowerCase().includes(query));
-            if(myT.length) {
-                html += `<div style="font-size:11px; opacity:0.5; margin:15px 0 5px 5px; font-weight:800;">LOCAL SUBJECTS</div>`;
-                myT.forEach(t => html += `<div class="result-item" onclick="ui.show('home')">📚 ${t.name}</div>`);
-            }
+        upload(m) { this.uploadMode = m; document.getElementById('file-in').click(); },
+        handleFile(i) {
+            const f = i.files[0]; const r = new FileReader();
+            r.onload = (e) => { 
+                if(this.uploadMode === 'pfp') { db.pfp = e.target.result; document.getElementById('p-pfp').src = e.target.result; }
+                else { db.banner = e.target.result; document.getElementById('p-banner').src = e.target.result; }
+                this.save();
+            };
+            r.readAsDataURL(f);
+        },
 
-            // 2. Global Users
-            try {
-                const snap = await rtdb.ref('users').orderByChild('username').startAt(query).endAt(query + "\uf8ff").limitToFirst(5).once('value');
-                if(snap.exists()){
-                    html += `<div style="font-size:11px; opacity:0.5; margin:15px 0 5px 5px; font-weight:800;">STUDENTS</div>`;
-                    snap.forEach(child => {
-                        const u = child.val().username || child.key;
-                        const pfp = `https://api.dicebear.com/7.x/notionists/svg?seed=${u}`;
-                        html += `<div class="result-item"><img src="${pfp}" class="res-avatar"><div><div style="font-weight:700;">${u}</div><div style="font-size:10px; opacity:0.5;">Firebase Profile</div></div></div>`;
-                    });
-                }
-            } catch(e) { console.error(e); }
-            
-            resBox.innerHTML = html || '<div style="padding:20px; opacity:0.5;">No results found.</div>';
-        }
-    };
-
-    const auth = {
-        async confirm() {
+        async authConfirm() {
             const u = document.getElementById('au').value.trim();
             const p = document.getElementById('ap').value.trim();
-            if(!u || !p) return;
-            if(this.mode==='signup') {
-                db.accounts[u]={pass:p}; db.user=u; await db.save(); location.reload();
+            if(this.authMode === 'signup') {
+                db.user = u; await this.save(); location.reload();
             } else {
-                rtdb.ref('users/'+u).once('value', s => {
-                    const d=s.val();
-                    if(d && d.acc.pass===p){ db.user=u; db.tables=d.tables||[]; db.accounts[u]=d.acc; db.save(); location.reload(); }
-                    else alert("Invalid Login");
-                });
+                const s = await rtdb.ref('users/'+u).once('value');
+                if(s.exists()) { db.user = u; db.tables = s.val().tables || []; db.pfp = s.val().pfp; db.banner = s.val().banner; this.save(); location.reload(); }
             }
         },
         logout() { localStorage.clear(); location.reload(); }
@@ -232,10 +220,12 @@
     window.onload = () => {
         if(db.user) {
             document.getElementById('un-display').innerText = db.user;
-            document.getElementById('guest-ui').style.display='none';
-            document.getElementById('user-ui').style.display='block';
+            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'block';
+            if(db.pfp) document.getElementById('p-pfp').src = db.pfp;
+            if(db.banner) document.getElementById('p-banner').src = db.banner;
         }
-        ui.render();
+        ui.renderHome();
     };
 </script>
 </body>
