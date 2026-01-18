@@ -3,36 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SyllabusStudy Ultimate</title>
+    <title>SyllabusStudy Pro</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { --glass: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.1); --accent: #007aff; }
-        body, html { margin:0; padding:0; background:#000; color:#fff; font-family:-apple-system, sans-serif; height:100vh; overflow:hidden; }
+        :root { --glass: rgba(255,255,255,0.08); --border: rgba(255,255,255,0.12); --accent: #007aff; --bg: #000; }
+        body, html { margin:0; padding:0; background:var(--bg); color:#fff; font-family:-apple-system, system-ui, sans-serif; height:100vh; overflow:hidden; }
         .wallpaper { position:fixed; inset:0; z-index:-1; background:radial-gradient(circle at top right, #1a1c2c, #000); }
         
-        .screen { position:absolute; inset:0; padding:60px 25px 120px; opacity:0; pointer-events:none; transition:0.4s; overflow-y:auto; }
+        /* GUI Framework */
+        .screen { position:absolute; inset:0; padding:60px 25px 120px; opacity:0; pointer-events:none; transition:0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y:auto; }
         .screen-active { opacity:1; pointer-events:auto; }
-        .glass-card { background:var(--glass); backdrop-filter:blur(40px); border:1px solid var(--border); border-radius:22px; padding:20px; margin-bottom:15px; }
+        .glass-card { background:var(--glass); backdrop-filter:blur(35px); border:1px solid var(--border); border-radius:24px; padding:20px; margin-bottom:15px; position:relative; }
         
-        .gui-input { background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:12px; padding:12px; color:#fff; width:calc(100% - 26px); margin-bottom:10px; outline:none; font-size:15px; }
-        .gui-btn { padding:16px; border-radius:14px; border:none; font-weight:700; cursor:pointer; width:100%; transition:0.2s; text-align:center; display:block; }
+        .gui-input { background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:14px; padding:14px; color:#fff; width:calc(100% - 30px); margin-bottom:12px; outline:none; font-size:16px; transition: 0.2s; }
+        .gui-input:focus { border-color: var(--accent); }
+        
+        .gui-btn { padding:16px; border-radius:16px; border:none; font-weight:700; cursor:pointer; width:100%; transition:0.2s; text-align:center; display:block; font-size:14px; }
         .gui-btn-primary { background:#fff; color:#000; }
-        .gui-btn-sec { background:var(--glass); color:#fff; border:1px solid var(--border); }
+        .gui-btn-primary:active { transform: scale(0.98); }
+        .gui-btn-sec { background:var(--glass); color:#fff; border:1px solid var(--border); margin-top:10px; }
 
-        .banner { width:100%; height:130px; border-radius:18px; object-fit:cover; background:#222; cursor:pointer; }
-        .pfp-wrap { width:75px; height:75px; border-radius:20px; border:4px solid #000; margin-top:-38px; margin-left:15px; overflow:hidden; background:#333; cursor:pointer; }
-        .badge { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:bold; margin-right:5px; background:var(--accent); }
+        /* Profile & Headers */
+        .banner { width:100%; height:140px; border-radius:20px; object-fit:cover; background:#222; cursor:pointer; }
+        .pfp-wrap { width:80px; height:80px; border-radius:22px; border:4px solid #000; margin-top:-40px; margin-left:20px; overflow:hidden; background:#333; cursor:pointer; position:relative; }
+        .pfp-wrap img { width:100%; height:100%; object-fit:cover; }
+        .badge { padding:4px 10px; border-radius:8px; font-size:10px; font-weight:900; background:var(--accent); margin-right:5px; text-transform:uppercase; }
         
-        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:center; justify-content:center; }
-        .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:30px; display:flex; justify-content:space-around; align-items:center; border:1px solid var(--border); }
-        .nav-item { opacity:0.4; font-size:9px; font-weight:bold; cursor:pointer; text-align:center; }
-        .nav-item.active { opacity:1; }
+        /* Navigation Dock */
+        .dock { position:fixed; bottom:25px; left:20px; right:20px; height:70px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:35px; display:flex; justify-content:space-around; align-items:center; border:1px solid var(--border); z-index:100; }
+        .nav-item { opacity:0.4; font-size:10px; font-weight:bold; cursor:pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; }
+        .nav-item.active { opacity:1; color: var(--accent); }
 
-        .res-item { padding:15px; background:var(--glass); border-radius:15px; margin-bottom:10px; border:1px solid var(--border); cursor:pointer; }
-        .msg-badge { background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px; position:absolute; top:-5px; right:-10px; }
+        /* Modals */
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:center; justify-content:center; }
+        
+        /* Search Items */
+        .res-box { padding:15px; background:rgba(255,255,255,0.05); border-radius:18px; margin-bottom:10px; border:1px solid var(--border); }
+        .res-type { font-size:9px; opacity:0.5; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
     </style>
 </head>
 <body>
@@ -40,65 +50,84 @@
     <div class="wallpaper"></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size:32px; font-weight:900;">Subjects</h1>
+        <h1 style="font-size:36px; font-weight:900; margin-bottom:10px;">Subjects</h1>
+        <p style="opacity:0.5; margin-bottom:30px;">Track your progress and goals.</p>
         <div id="subject-container"></div>
-        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-subject')">+ New Subject</button>
+        <button class="gui-btn gui-btn-primary" onclick="gui.open('new-subject')">+ Create New Subject</button>
     </div>
 
     <div id="view-search" class="screen">
-        <h1 style="font-size:32px; font-weight:900;">Omni Search</h1>
-        <input type="text" id="sq" class="gui-input" placeholder="Search users, subjects, or goals..." oninput="core.doSearch()">
+        <h1 style="font-size:36px; font-weight:900; margin-bottom:20px;">Search</h1>
+        <div class="glass-card" style="padding:10px;">
+            <input type="text" id="sq" class="gui-input" style="margin-bottom:0;" placeholder="Search users, tables, or goals..." oninput="core.doSearch()">
+        </div>
         <div id="search-results" style="margin-top:20px;"></div>
     </div>
 
-    <div id="view-messages" class="screen">
-        <h1 style="font-size:32px; font-weight:900;">Messages</h1>
-        <div id="announcements-container"></div>
-        <div id="invites-container"></div>
+    <div id="view-msgs" class="screen">
+        <h1 style="font-size:36px; font-weight:900; margin-bottom:20px;">Messages</h1>
+        <div id="announcement-list"></div>
+        <h3 style="margin-top:30px; opacity:0.7;">Family Requests</h3>
+        <div id="invite-list"></div>
     </div>
 
     <div id="view-profile" class="screen" style="padding:0;">
-        <div style="position:relative;">
-            <img id="u-banner" src="https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800" class="banner" onclick="core.triggerUpload('banner')">
-            <div onclick="core.toSettings()" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); padding:10px; border-radius:15px; cursor:pointer;">⚙️ Settings</div>
-        </div>
-        <div class="pfp-wrap" onclick="core.triggerUpload('pfp')"><img id="u-pfp" src=""></div>
+        <img id="u-banner" src="" class="banner" onclick="core.triggerFile('bnr')">
+        <div class="pfp-wrap" onclick="core.triggerFile('pfp')"><img id="u-pfp" src=""></div>
         <div style="padding:20px;">
-            <h1 id="u-name" style="margin:0;">Guest</h1>
-            <div id="u-badges"></div>
-            <div id="auth-box" style="margin-top:20px; display:flex; gap:10px;">
-                <button class="gui-btn gui-btn-primary" onclick="gui.open('auth', 'signup')">Sign Up</button>
-                <button class="gui-btn gui-btn-sec" onclick="gui.open('auth', 'login')">Log In</button>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <h1 id="u-name" style="margin:0; font-size:28px;">Guest</h1>
+                    <div id="u-badges" style="margin-top:5px;"></div>
+                </div>
+                <div onclick="core.toSettings()" style="background:var(--glass); padding:12px; border-radius:15px; cursor:pointer; border:1px solid var(--border);">⚙️</div>
+            </div>
+            
+            <div id="auth-ui" style="margin-top:40px;">
+                <p style="opacity:0.6; text-align:center;">Sign in to sync your family and tables across devices.</p>
+                <button class="gui-btn gui-btn-primary" onclick="gui.open('auth','signup')">Sign Up</button>
+                <button class="gui-btn gui-btn-sec" onclick="gui.open('auth','login')">Log In</button>
+            </div>
+            
+            <div id="profile-stats" style="margin-top:30px; display:none;">
+                <div class="glass-card" style="display:flex; justify-content:space-around; text-align:center;">
+                    <div><b id="stat-sub">0</b><br><small opacity="0.5">Subjects</small></div>
+                    <div><b id="stat-fam">0</b><br><small opacity="0.5">Family</small></div>
+                </div>
+                <button class="gui-btn gui-btn-sec" style="color:#ff453a; margin-top:20px;" onclick="core.logout()">Sign Out</button>
             </div>
         </div>
     </div>
 
-    <div id="view-visitor" class="screen" style="padding:0;">
-        <div onclick="ui.show('search')" style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.5); padding:10px; border-radius:10px;">← Back</div>
-        <img id="v-banner" src="" class="banner">
-        <div class="pfp-wrap"><img id="v-pfp" src=""></div>
-        <div style="padding:20px;"><h1 id="v-name"></h1><div id="v-subjects"></div></div>
-    </div>
-
-    <input type="file" id="file-input" style="display:none" onchange="core.handleFile(this)">
-
-    <div id="dialog" class="overlay">
-        <div class="glass-card" style="width:85%; max-width:320px;">
-            <h3 id="d-title"></h3>
-            <div id="d-body"></div>
-            <div id="d-footer" style="margin-top:20px; display:flex; gap:10px;"></div>
+    <div id="view-settings" class="screen">
+        <div onclick="ui.show('profile')" style="margin-bottom:20px; opacity:0.6; cursor:pointer;">← Back to Profile</div>
+        <h2 style="font-size:32px; margin-bottom:20px;">Settings</h2>
+        <div class="glass-card">
+            <h3>Invite to Family</h3>
+            <input type="text" id="fam-invite-target" class="gui-input" placeholder="Enter username...">
+            <button class="gui-btn gui-btn-primary" onclick="core.sendInvite()">Send Invitation</button>
         </div>
     </div>
 
+    <div id="dialog" class="overlay">
+        <div class="glass-card" style="width:85%; max-width:340px;">
+            <h3 id="d-title" style="margin-top:0; font-size:22px;"></h3>
+            <div id="d-body"></div>
+            <div id="d-footer" style="margin-top:25px; display:flex; gap:10px;"></div>
+        </div>
+    </div>
+
+    <input type="file" id="f-in" style="display:none" onchange="core.handleFile(this)">
+
     <nav class="dock">
-        <div class="nav-item active" onclick="ui.show('home', this)">HOME</div>
-        <div class="nav-item" onclick="ui.show('search', this)">SEARCH</div>
-        <div class="nav-item" style="position:relative;" onclick="ui.show('messages', this)">MSGS<span id="msg-dot" class="msg-badge" style="display:none">!</span></div>
-        <div class="nav-item" onclick="ui.show('profile', this)">ME</div>
+        <div class="nav-item active" onclick="ui.show('home', this)"><span>🏠</span><span>HOME</span></div>
+        <div class="nav-item" onclick="ui.show('search', this)"><span>🔍</span><span>SEARCH</span></div>
+        <div class="nav-item" onclick="ui.show('msgs', this)"><span>💬</span><span>MSGS</span></div>
+        <div class="nav-item" onclick="ui.show('profile', this)"><span>👤</span><span>ME</span></div>
     </nav>
 
 <script>
-    // Firebase Init
+    // 1. DATABASE INITIALIZATION
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -109,27 +138,67 @@
     firebase.initializeApp(firebaseConfig);
     const rdb = firebase.database();
 
+    // 2. STATE MANAGEMENT
     let state = {
         user: localStorage.getItem('ss_u'),
         pass: localStorage.getItem('ss_p'),
-        subjects: JSON.parse(localStorage.getItem('ss_s')) || [],
-        family: JSON.parse(localStorage.getItem('ss_f')) || [],
-        pfp: localStorage.getItem('ss_pfp') || 'https://api.dicebear.com/7.x/notionists/svg?seed=Guest',
-        banner: localStorage.getItem('ss_bnr') || '',
-        invites: []
+        subjects: [],
+        family: [],
+        invites: [],
+        badges: ["Student"],
+        pfp: '', bnr: '',
+        upMode: ''
     };
 
+    // 3. UI CONTROLLER
+    const ui = {
+        show(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
+            document.getElementById('view-'+id).classList.add('screen-active');
+            if(el) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
+        },
+        renderProfile(data) {
+            document.getElementById('u-name').innerText = data.user;
+            document.getElementById('u-pfp').src = data.pfp || 'https://api.dicebear.com/7.x/notionists/svg?seed=' + data.user;
+            document.getElementById('u-banner').src = data.bnr || 'https://images.unsplash.com/photo-1519681393784-d120267953ba?w=800';
+            document.getElementById('u-badges').innerHTML = (data.badges || []).map(b => `<span class="badge">${b}</span>`).join('');
+            document.getElementById('stat-sub').innerText = (data.subjects || []).length;
+            document.getElementById('stat-fam').innerText = (data.family || []).length;
+            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('profile-stats').style.display = 'block';
+        },
+        renderInvites(list) {
+            const container = document.getElementById('invite-list');
+            if(!list || list.length === 0) { container.innerHTML = "<p opacity='0.5'>No pending invites.</p>"; return; }
+            container.innerHTML = list.map(sender => `
+                <div class="glass-card">
+                    <b>${sender}</b> wants you to join their family circle.
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button class="gui-btn gui-btn-primary" onclick="core.handleInvite('${sender}', true)">Accept</button>
+                        <button class="gui-btn gui-btn-sec" style="margin-top:0" onclick="core.handleInvite('${sender}', false)">Decline</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    };
+
+    // 4. GUI DIALOG SYSTEM
     const gui = {
         open(type, mode) {
             const b = document.getElementById('d-body'), f = document.getElementById('d-footer'), h = document.getElementById('d-title');
-            b.innerHTML = ""; f.innerHTML = ""; h.innerText = type;
+            b.innerHTML = ""; f.innerHTML = "";
+            
             if(type === 'auth') {
                 h.innerText = mode === 'signup' ? "Create Account" : "Welcome Back";
                 b.innerHTML = `<input id="v1" class="gui-input" placeholder="Username"><input id="v2" type="password" class="gui-input" placeholder="Password">`;
-                f.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.auth('${mode}')">Submit</button><button class="gui-btn gui-btn-sec" onclick="gui.close()">Cancel</button>`;
+                f.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.auth('${mode}')">Continue</button>`;
             }
             if(type === 'new-subject') {
-                b.innerHTML = `<input id="v1" class="gui-input" placeholder="Subject Name">`;
+                h.innerText = "New Subject";
+                b.innerHTML = `<input id="v1" class="gui-input" placeholder="Subject Name (e.g. Physics)">`;
                 f.innerHTML = `<button class="gui-btn gui-btn-primary" onclick="core.addSubject()">Create</button>`;
             }
             document.getElementById('dialog').style.display = 'flex';
@@ -137,118 +206,121 @@
         close() { document.getElementById('dialog').style.display = 'none'; }
     };
 
-    const ui = {
-        show(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
-            document.getElementById('view-'+id).classList.add('screen-active');
-            if(el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
-        }
-    };
-
+    // 5. CORE FUNCTIONALITY
     const core = {
         async auth(mode) {
             const u = document.getElementById('v1').value.trim().toLowerCase();
             const p = document.getElementById('v2').value;
             if(!u || !p) return;
-            const snap = await rdb.ref('users/'+u).once('value');
+            const snap = await rdb.ref('users/' + u).once('value');
             if(mode === 'login') {
                 if(snap.exists() && snap.val().pass === p) {
-                    Object.assign(state, snap.val());
-                    this.saveLocal(); location.reload();
-                } else { alert("Invalid Credentials"); }
+                    localStorage.setItem('ss_u', u); localStorage.setItem('ss_p', p);
+                    location.reload();
+                } else alert("Invalid username or password");
             } else {
-                if(snap.exists()) return alert("User exists");
-                state.user = u; state.pass = p;
-                await rdb.ref('users/'+u).set(state);
-                this.saveLocal(); location.reload();
+                if(snap.exists()) return alert("Username already taken");
+                const newUser = { user: u, pass: p, subjects: [], family: [], invites: [], badges: ["Student", "Pro"] };
+                await rdb.ref('users/' + u).set(newUser);
+                localStorage.setItem('ss_u', u); localStorage.setItem('ss_p', p);
+                location.reload();
             }
-        },
-        saveLocal() {
-            localStorage.setItem('ss_u', state.user); localStorage.setItem('ss_p', state.pass);
-            localStorage.setItem('ss_s', JSON.stringify(state.subjects));
         },
         async doSearch() {
             const q = document.getElementById('sq').value.toLowerCase();
-            const res = document.getElementById('search-results');
-            if(!q) { res.innerHTML = ""; return; }
+            const resBox = document.getElementById('search-results');
+            if(!q) { resBox.innerHTML = ""; return; }
             const snap = await rdb.ref('users').once('value');
             let html = "";
-            snap.forEach(c => {
-                const u = c.val();
-                if(u.user.includes(q)) html += `<div class="res-item" onclick="core.viewUser('${u.user}')">👤 User: ${u.user}</div>`;
-                (u.subjects||[]).forEach(s => {
-                    if(s.name.toLowerCase().includes(q)) html += `<div class="res-item">📚 Subject: ${s.name} (by ${u.user})</div>`;
+            snap.forEach(child => {
+                const u = child.val();
+                // Search Users
+                if(u.user.includes(q)) html += `<div class="res-box"><div class="res-type">User</div><b>${u.user}</b></div>`;
+                // Search Subjects
+                (u.subjects || []).forEach(s => {
+                    if(s.name.toLowerCase().includes(q)) {
+                        html += `<div class="res-box"><div class="res-type">Subject</div><b>${s.name}</b><br><small>by ${u.user}</small></div>`;
+                    }
                 });
             });
-            res.innerHTML = html;
+            resBox.innerHTML = html || "<p style='text-align:center; opacity:0.5;'>No results found.</p>";
         },
-        async viewUser(uname) {
-            const s = await rdb.ref('users/'+uname).once('value');
-            const d = s.val();
-            document.getElementById('v-name').innerText = d.user;
-            document.getElementById('v-pfp').src = d.pfp;
-            document.getElementById('v-banner').src = d.banner;
-            ui.show('visitor');
+        async addSubject() {
+            const name = document.getElementById('v1').value.trim();
+            if(!name || !state.user) return;
+            const snap = await rdb.ref('users/'+state.user+'/subjects').once('value');
+            const subs = snap.val() || [];
+            subs.push({ name: name, tasks: [] });
+            await rdb.ref('users/'+state.user).update({ subjects: subs });
+            gui.close(); location.reload();
         },
-        triggerUpload(mode) { this.upMode = mode; document.getElementById('file-input').click(); },
+        toSettings() { if(!state.user) gui.open('auth','login'); else ui.show('settings'); },
+        async sendInvite() {
+            const target = document.getElementById('fam-invite-target').value.trim().toLowerCase();
+            if(!target || target === state.user) return;
+            const snap = await rdb.ref('users/'+target).once('value');
+            if(!snap.exists()) return alert("User not found");
+            let targetInvites = snap.val().invites || [];
+            if(!targetInvites.includes(state.user)) {
+                targetInvites.push(state.user);
+                await rdb.ref('users/'+target+'/invites').set(targetInvites);
+                alert("Invite sent to " + target);
+            }
+        },
+        async handleInvite(sender, accept) {
+            const snap = await rdb.ref('users/'+state.user).once('value');
+            let myData = snap.val();
+            myData.invites = myData.invites.filter(i => i !== sender);
+            if(accept) {
+                if(!myData.family) myData.family = [];
+                myData.family.push(sender);
+                // Also add me to their family
+                const otherSnap = await rdb.ref('users/'+sender+'/family').once('value');
+                let otherFam = otherSnap.val() || [];
+                otherFam.push(state.user);
+                await rdb.ref('users/'+sender+'/family').set(otherFam);
+            }
+            await rdb.ref('users/'+state.user).set(myData);
+            location.reload();
+        },
+        triggerFile(mode) { this.upMode = mode; document.getElementById('f-in').click(); },
         handleFile(el) {
-            const f = el.files[0]; const reader = new FileReader();
+            const reader = new FileReader();
             reader.onload = async (e) => {
-                if(this.upMode === 'pfp') state.pfp = e.target.result;
-                else state.banner = e.target.result;
-                await rdb.ref('users/'+state.user).update(state);
+                const key = this.upMode === 'pfp' ? 'pfp' : 'bnr';
+                await rdb.ref('users/'+state.user).update({ [key]: e.target.result });
                 location.reload();
             };
-            reader.readAsDataURL(f);
+            reader.readAsDataURL(el.files[0]);
         },
-        async invite() {
-            const target = document.getElementById('fam-in').value.trim().toLowerCase();
-            if(!target) return;
-            const snap = await rdb.ref('users/'+target).once('value');
-            if(snap.exists()) {
-                const currentInvites = snap.val().invites || [];
-                currentInvites.push(state.user);
-                await rdb.ref('users/'+target+'/invites').set(currentInvites);
-                alert("Invite Sent!");
-            }
-        },
-        async respondInvite(sender, accept) {
-            state.invites = state.invites.filter(i => i !== sender);
-            if(accept) state.family.push(sender);
-            await rdb.ref('users/'+state.user).update({invites: state.invites, family: state.family});
-            location.reload();
-        }
+        logout() { localStorage.clear(); location.reload(); }
     };
 
+    // 6. INITIALIZATION & DATA SYNC
     window.onload = async () => {
         if(state.user) {
-            const snap = await rdb.ref('users/'+state.user).once('value');
-            const d = snap.val();
-            document.getElementById('u-name').innerText = d.user;
-            document.getElementById('u-pfp').src = d.pfp;
-            document.getElementById('u-banner').src = d.banner;
-            document.getElementById('auth-box').style.display = 'none';
-            
-            // Render Invites
-            if(d.invites && d.invites.length > 0) {
-                document.getElementById('msg-dot').style.display = 'block';
-                document.getElementById('invites-container').innerHTML = d.invites.map(i => `
-                    <div class="glass-card">
-                        <p><b>${i}</b> invited you to their family!</p>
-                        <div style="display:flex; gap:10px;">
-                            <button class="gui-btn gui-btn-primary" onclick="core.respondInvite('${i}', true)">Accept</button>
-                            <button class="gui-btn gui-btn-sec" onclick="core.respondInvite('${i}', false)">Decline</button>
+            rdb.ref('users/' + state.user).on('value', snap => {
+                const data = snap.val();
+                if(data) {
+                    ui.renderProfile(data);
+                    ui.renderInvites(data.invites);
+                    document.getElementById('subject-container').innerHTML = (data.subjects || []).map(s => `
+                        <div class="glass-card">
+                            <div style="font-size:18px; font-weight:bold;">${s.name}</div>
+                            <div style="opacity:0.5; font-size:12px;">${(s.tasks||[]).length} Goals active</div>
                         </div>
-                    </div>
-                `).join('');
-            }
-            // Admin Announcements
-            document.getElementById('announcements-container').innerHTML = `
-                <div class="glass-card" style="border-left: 4px solid var(--accent)">
-                    <small style="color:var(--accent)">ADMIN ANNOUNCEMENT</small>
-                    <p>Welcome to SyllabusStudy v2.0! Omni-search is now live.</p>
-                </div>`;
+                    `).join('');
+                }
+            });
         }
+        
+        // Static Announcements
+        document.getElementById('announcement-list').innerHTML = `
+            <div class="glass-card" style="border-left:4px solid gold;">
+                <small style="color:gold; font-weight:bold;">ADMIN MESSAGE</small>
+                <p>Welcome to the 2026 stable build. Omni-Search and Family Invites are fully operational.</p>
+            </div>
+        `;
     };
 </script>
 </body>
