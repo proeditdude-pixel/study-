@@ -10,9 +10,9 @@
 
     <style>
         :root { 
-            --apple-glass: rgba(255, 255, 255, 0.1);
-            --apple-border: rgba(255, 255, 255, 0.2);
-            --vibrancy: blur(40px) saturate(210%) brightness(1.1);
+            --apple-glass: rgba(255, 255, 255, 0.12);
+            --apple-border: rgba(255, 255, 255, 0.25);
+            --vibrancy: blur(45px) saturate(210%) brightness(1.1);
         }
 
         body, html { 
@@ -24,18 +24,18 @@
             position: fixed; inset: 0; z-index: -1;
             background: radial-gradient(circle at top right, #1a1c2c, #000);
         }
-
         .orb {
-            position: absolute; width: 400px; height: 400px; border-radius: 50%;
-            filter: blur(80px); opacity: 0.2; animation: float 20s infinite alternate;
+            position: absolute; width: 450px; height: 450px; border-radius: 50%;
+            filter: blur(80px); opacity: 0.15; animation: float 25s infinite alternate;
         }
         .orb-1 { background: #007aff; top: -10%; left: -10%; }
         .orb-2 { background: #5856d6; bottom: -10%; right: -10%; animation-delay: -5s; }
-        @keyframes float { from { transform: translate(0,0); } to { transform: translate(100px, 50px); } }
+        @keyframes float { from { transform: translate(0,0); } to { transform: translate(120px, 60px); } }
 
+        /* Screens */
         .screen { 
             position: absolute; inset: 0; padding: 60px 25px 120px;
-            opacity: 0; transform: scale(0.95); pointer-events: none;
+            opacity: 0; transform: scale(0.96); pointer-events: none;
             transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); overflow-y: auto;
         }
         .screen-active { opacity: 1; transform: scale(1); pointer-events: auto; }
@@ -45,50 +45,38 @@
             backdrop-filter: var(--vibrancy); -webkit-backdrop-filter: var(--vibrancy);
             border: 0.5px solid var(--apple-border);
             border-radius: 30px; padding: 25px; margin-bottom: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
-        /* Search Page Styles */
+        /* Search Layout */
         #search-screen {
             position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(50px) saturate(200%); z-index: 5000;
+            backdrop-filter: blur(55px) saturate(200%); z-index: 5000;
             display: none; flex-direction: column; padding: 60px 25px;
         }
         .search-bar {
             background: rgba(255,255,255,0.1); border: 0.5px solid var(--apple-border);
-            border-radius: 20px; padding: 5px 15px; display: flex; align-items: center;
+            border-radius: 22px; padding: 6px 15px; display: flex; align-items: center;
         }
-        .search-bar input { 
-            background: transparent; border: none; color: #fff; 
-            font-size: 17px; width: 100%; outline: none; padding: 12px 5px;
-        }
-        .search-btn {
-            background: #fff; color: #000; border: none; border-radius: 12px;
-            padding: 8px 15px; font-weight: 700; font-size: 13px; cursor: pointer;
-            margin-left: 10px; transition: 0.2s;
-        }
-        .search-btn:active { transform: scale(0.9); }
+        .search-bar input { background: transparent; border: none; color: #fff; font-size: 17px; width: 100%; outline: none; padding: 10px; }
+        .search-btn { background: #fff; color: #000; border: none; border-radius: 12px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
 
         .result-item {
-            padding: 15px; border-radius: 20px; background: rgba(255,255,255,0.05);
+            padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.06);
             margin-top: 10px; display: flex; align-items: center; gap: 12px;
             border: 0.5px solid transparent;
         }
-        .res-avatar { width: 38px; height: 38px; border-radius: 12px; }
+        .res-avatar { width: 40px; height: 40px; border-radius: 14px; background: #222; }
 
-        .btn { width: 100%; padding: 20px; border-radius: 22px; border: none; font-weight: 700; font-size: 16px; transition: 0.2s; cursor: pointer; }
+        /* UI Kit */
+        .btn { width: 100%; padding: 20px; border-radius: 22px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
         .btn-white { background: #fff; color: #000; }
         .btn-glass { background: rgba(255,255,255,0.1); color: #fff; border: 0.5px solid var(--apple-border); }
-
-        .input-apple {
-            width: 100%; background: rgba(0,0,0,0.3); border: 0.5px solid var(--apple-border);
-            padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px; outline: none; box-sizing: border-box;
-        }
+        .input-apple { width: 100%; background: rgba(0,0,0,0.3); border: 0.5px solid var(--apple-border); padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px; box-sizing: border-box; outline: none; }
 
         .dock {
             position: fixed; bottom: 30px; left: 25px; right: 25px; height: 75px;
             background: rgba(255,255,255,0.1); backdrop-filter: blur(30px);
-            border: 0.5px solid var(--apple-border); border-radius: 32px;
+            border: 0.5px solid var(--apple-border); border-radius: 35px;
             display: flex; justify-content: space-around; align-items: center; z-index: 1000;
         }
         .nav-item { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
@@ -100,16 +88,16 @@
     <div class="wallpaper"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
 
     <div id="view-home" class="screen screen-active">
-        <h1 style="font-size: 44px; font-weight: 800; letter-spacing: -2.5px;">SyllabusStudy</h1>
+        <h1 style="font-size: 42px; font-weight: 800; letter-spacing: -2px;">SyllabusStudy</h1>
         <div id="table-display"></div>
         <button class="btn btn-white" onclick="ui.openCreate()">+ New Subject</button>
     </div>
 
     <div id="search-screen">
         <div class="search-bar">
-            <input type="text" id="q" placeholder="Search usernames..." onkeydown="if(event.key==='Enter') search.run(this.value)">
+            <input type="text" id="q" placeholder="Search Subjects, Goals, or Users..." onkeydown="if(event.key==='Enter') search.run(this.value)">
             <button class="search-btn" onclick="search.run(document.getElementById('q').value)">Search</button>
-            <span onclick="ui.closeSearch()" style="margin-left:15px; cursor:pointer; font-size:20px;">✕</span>
+            <span onclick="ui.closeSearch()" style="margin-left:15px; cursor:pointer; font-size:22px;">✕</span>
         </div>
         <div id="search-results" style="margin-top:20px; overflow-y:auto"></div>
     </div>
@@ -125,9 +113,9 @@
         </div>
     </div>
 
-    <div id="modal-auth" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(25px); z-index:9000; display:none; align-items:center; justify-content:center; padding:30px;">
-        <div class="glass-panel" style="width:100%; max-width:320px">
-            <h2 id="atitle" style="margin-top:0">Auth</h2>
+    <div id="modal-auth" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(25px); z-index:9000; display:none; align-items:center; justify-content:center; padding:30px;">
+        <div class="glass-panel" style="width:100%; max-width:340px">
+            <h2 id="atitle" style="margin-top:0">Authentication</h2>
             <input type="text" id="au" class="input-apple" placeholder="Username">
             <input type="password" id="ap" class="input-apple" placeholder="Password">
             <button class="btn btn-white" onclick="auth.confirm()">Continue</button>
@@ -142,6 +130,7 @@
     </nav>
 
 <script>
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyC2ryrcM8eRTUIkBrVitQUWn2x5oTbbnmE",
       authDomain: "syllabuspro-4ec5c.firebaseapp.com",
@@ -184,7 +173,7 @@
             document.getElementById('table-display').innerHTML = db.tables.map(t=>`
                 <div class="glass-panel">
                     <div style="font-size:24px; font-weight:700;">${t.name}</div>
-                    <div style="font-size:12px; opacity:0.4; margin-top:5px;">${t.tasks.length} Goals</div>
+                    <div style="font-size:12px; opacity:0.4; margin-top:5px;">${t.tasks.length} Goals Linked</div>
                 </div>
             `).join('');
         }
@@ -193,21 +182,32 @@
     const search = {
         async run(q) {
             if(!q) return;
-            document.getElementById('search-results').innerHTML = '<div style="padding:20px; opacity:0.5;">Searching...</div>';
-            q = q.toLowerCase();
+            const resBox = document.getElementById('search-results');
+            resBox.innerHTML = '<div style="padding:20px; opacity:0.5;">Searching...</div>';
+            const query = q.toLowerCase();
             let html = '';
 
+            // 1. My Subjects
+            const myT = db.tables.filter(t => t.name.toLowerCase().includes(query));
+            if(myT.length) {
+                html += `<div style="font-size:11px; opacity:0.5; margin:15px 0 5px 5px; font-weight:800;">LOCAL SUBJECTS</div>`;
+                myT.forEach(t => html += `<div class="result-item" onclick="ui.show('home')">📚 ${t.name}</div>`);
+            }
+
+            // 2. Global Users
             try {
-                const snap = await rtdb.ref('users').orderByChild('username').startAt(q).endAt(q + "\uf8ff").limitToFirst(10).once('value');
+                const snap = await rtdb.ref('users').orderByChild('username').startAt(query).endAt(query + "\uf8ff").limitToFirst(5).once('value');
                 if(snap.exists()){
+                    html += `<div style="font-size:11px; opacity:0.5; margin:15px 0 5px 5px; font-weight:800;">STUDENTS</div>`;
                     snap.forEach(child => {
                         const u = child.val().username || child.key;
                         const pfp = `https://api.dicebear.com/7.x/notionists/svg?seed=${u}`;
-                        html += `<div class="result-item"><img src="${pfp}" class="res-avatar"><div><div style="font-weight:700;">${u}</div><div style="font-size:10px; opacity:0.5;">Student</div></div></div>`;
+                        html += `<div class="result-item"><img src="${pfp}" class="res-avatar"><div><div style="font-weight:700;">${u}</div><div style="font-size:10px; opacity:0.5;">Firebase Profile</div></div></div>`;
                     });
-                } else { html = '<div style="padding:20px; opacity:0.5;">No users found.</div>'; }
-            } catch(e) { html = '<div style="padding:20px; color:#ff3b30;">Search Error. Check Rules.</div>'; }
-            document.getElementById('search-results').innerHTML = html;
+                }
+            } catch(e) { console.error(e); }
+            
+            resBox.innerHTML = html || '<div style="padding:20px; opacity:0.5;">No results found.</div>';
         }
     };
 
@@ -222,7 +222,7 @@
                 rtdb.ref('users/'+u).once('value', s => {
                     const d=s.val();
                     if(d && d.acc.pass===p){ db.user=u; db.tables=d.tables||[]; db.accounts[u]=d.acc; db.save(); location.reload(); }
-                    else alert("Invalid credentials");
+                    else alert("Invalid Login");
                 });
             }
         },
